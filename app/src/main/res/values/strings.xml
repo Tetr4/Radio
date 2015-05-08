@@ -1,14 +1,8 @@
 <resources>
     <string name="app_name">NinaRadio</string>
 
-    <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
-
-    <string name="currently_playing_song">Song currently playing</string>
-    <string name="currently_playing_artist">Artist of currently playing song</string>
-    <string name="currently_playing_extra_info">Extra info for currently playing song</string>
-    <string name="play_item">Play item</string>
+    <string name="current_station">Station currently playing</string>
+    <string name="current_url">Url of currently playing station</string>
+    <string name="play_station">Play station</string>
     <string name="play_pause">play or pause</string>
-    <string name="skip_next">skip to next</string>
-    <string name="skip_prev">skip to previous</string>
 </resources>

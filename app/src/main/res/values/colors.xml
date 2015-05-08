@@ -15,13 +15,6 @@
   limitations under the License.
   -->
 <resources>
-    <color name="bt_accent">#00B8D4</color>
-    <color name="media_item_icon_playing">@color/bt_accent</color>
-    <color name="media_item_icon_not_playing">#ccc</color>
-    <color name="drawer_header_background">@color/bt_accent</color>
-    <color name="error_message_background">#ffff1600</color>
-    <color name="drawer_item_selected_background">#feee</color>
-    <color name="drawer_item_tint_color">#ff333333</color>
-    <color name="fullscreen_secondary_line_color">#E5CCCCCC</color>
-    <color name="fullscreen_line_color">#E5FFFFFF</color>
+    <color name="accent">#00B8D4</color>
+    <color name="station_item_icon_not_playing">#ccc</color>
 </resources>
