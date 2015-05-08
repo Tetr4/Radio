@@ -1,30 +1,19 @@
 package de.winterrettich.ninaradio.ui;
 
 import android.app.Activity;
-import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.util.Log;
 
-import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
-import java.io.IOException;
-
-import javax.inject.Inject;
-
-import dagger.Module;
-import dagger.ObjectGraph;
-import dagger.Provides;
-import de.winterrettich.ninaradio.MediaPlayerHelper;
+import de.winterrettich.ninaradio.RadioPlayer;
 import de.winterrettich.ninaradio.R;
 import de.winterrettich.ninaradio.RadioApplication;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
 
 public class MainActivity extends Activity {
     private PlayBackControlsFragment mControlsFragment;
-    private StationListFragment mListFragment;
 
-    MediaPlayerHelper mPlayerHelper;
+    RadioPlayer mPlayerHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,10 +22,9 @@ public class MainActivity extends Activity {
         mControlsFragment = (PlayBackControlsFragment) getFragmentManager()
                 .findFragmentById(R.id.fragment_playback_controls);
 
-        mListFragment = (StationListFragment) getFragmentManager()
-                .findFragmentById(R.id.fragment_radio_list);
+        hidePlaybackControls();
 
-        mPlayerHelper = new MediaPlayerHelper();
+        mPlayerHelper = new RadioPlayer();
 
         RadioApplication.sBus.register(this);
     }
