@@ -4,7 +4,6 @@ import android.app.Fragment;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,18 +12,21 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import java.util.HashMap;
+import com.squareup.otto.Subscribe;
+
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import de.winterrettich.ninaradio.R;
 import de.winterrettich.ninaradio.RadioApplication;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
-import de.winterrettich.ninaradio.event.SwitchStationEvent;
+import de.winterrettich.ninaradio.event.SelectStationEvent;
 import de.winterrettich.ninaradio.model.Station;
 
 public class StationListFragment extends Fragment implements AdapterView.OnItemClickListener {
+    private ListView mListView;
+    private StationsListAdapter mAdapter;
+
     public StationListFragment() {}
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -35,24 +37,41 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
         stations.add(new Station("Rock", "http://197.189.206.172:8000/stream"));
         stations.add(new Station("Blubb", "http://usa8-vn.mixstream.net:8138"));
 
-        ListView listView = (ListView) rootView.findViewById(R.id.list_view);
-        //listView.addFooterView();
-        listView.setAdapter(new StationsListAdapter(getActivity(), stations));
-        listView.setOnItemClickListener(this);
+        mListView = (ListView) rootView.findViewById(R.id.list_view);
+        //mListView.addFooterView();
+        mAdapter = new StationsListAdapter(getActivity(), stations);
+        mListView.setAdapter(mAdapter);
+        mListView.setOnItemClickListener(this);
+
+        RadioApplication.sBus.register(this);
 
         return rootView;
     }
 
+    @Subscribe
+    public void handlePlaybackEvent(PlaybackEvent event) {
+        switch (event.type) {
+            case PLAY:
+                break;
+            case PAUSE:
+                break;
+            case STOP:
+                mListView.setChoiceMode(ListView.CHOICE_MODE_NONE);
+                mListView.setAdapter(mAdapter);
+                break;
+        }
+    }
+
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        //mListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
         Station station = (Station) parent.getItemAtPosition(position);
-        RadioApplication.sBus.post(new SwitchStationEvent(station));
+
+        RadioApplication.sBus.post(new SelectStationEvent(station));
         RadioApplication.sBus.post(new PlaybackEvent(PlaybackEvent.Type.PLAY));
-        Log.d("STATION", station.name);
     }
 
     private class StationsListAdapter extends ArrayAdapter<Station> {
-        Map<String, Integer> mIdMap = new HashMap<String, Integer>();
 
         public StationsListAdapter(Context context, List<Station> objects) {
             super(context, 0, objects);
