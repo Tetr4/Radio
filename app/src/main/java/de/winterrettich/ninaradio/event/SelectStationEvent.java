@@ -2,9 +2,9 @@ package de.winterrettich.ninaradio.event;
 
 import de.winterrettich.ninaradio.model.Station;
 
-public class SwitchStationEvent {
+public class SelectStationEvent {
     public Station station;
-    public SwitchStationEvent(Station station) {
+    public SelectStationEvent(Station station) {
         this.station = station;
     }
 }
