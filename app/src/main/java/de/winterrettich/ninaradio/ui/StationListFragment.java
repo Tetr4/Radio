@@ -26,20 +26,19 @@ import de.winterrettich.ninaradio.model.Station;
 public class StationListFragment extends Fragment implements AdapterView.OnItemClickListener {
     private ListView mListView;
     private StationsListAdapter mAdapter;
+    private LinkedList<Station> mStations = new LinkedList<>();
 
-    public StationListFragment() {}
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_station_list, container, false);
 
         MediaPlayer mediaPlayer = new MediaPlayer();
-        List<Station> stations = new LinkedList<>();
-        stations.add(new Station("Rock", "http://197.189.206.172:8000/stream"));
-        stations.add(new Station("Blubb", "http://usa8-vn.mixstream.net:8138"));
+        mStations.add(new Station("Rock", "http://197.189.206.172:8000/stream"));
+        mStations.add(new Station("Blubb", "http://usa8-vn.mixstream.net:8138"));
 
         mListView = (ListView) rootView.findViewById(R.id.list_view);
         //mListView.addFooterView();
-        mAdapter = new StationsListAdapter(getActivity(), stations);
+        mAdapter = new StationsListAdapter(getActivity(), mStations);
         mListView.setAdapter(mAdapter);
         mListView.setOnItemClickListener(this);
 
@@ -59,6 +58,14 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
                 mListView.setChoiceMode(ListView.CHOICE_MODE_NONE);
                 mListView.setAdapter(mAdapter);
                 break;
+        }
+    }
+
+    @Subscribe
+    public void handleSelectStationEvent(SelectStationEvent event) {
+        if(mStations.contains(event.station)) {
+            int position = mAdapter.getPosition(event.station);
+            mListView.setItemChecked(position, true);
         }
     }
 
@@ -93,6 +100,11 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
             return convertView;
         }
 
+    }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        RadioApplication.sBus.unregister(this);
     }
 }
