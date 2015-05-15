@@ -72,9 +72,9 @@ public class RadioNotificationManager {
                 .setDeleteIntent(mDismissIntent);
 
         if(mPlaybackState == PlaybackEvent.Type.PLAY) {
-            builder.addAction(R.drawable.ic_pause_black_36dp, "Pause", mPauseIntent);
+            builder.addAction(R.drawable.ic_pause, "Pause", mPauseIntent);
         } else {
-            builder.addAction(R.drawable.ic_play_arrow_black_36dp, "Play", mPlayIntent);
+            builder.addAction(R.drawable.ic_play, "Play", mPlayIntent);
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
