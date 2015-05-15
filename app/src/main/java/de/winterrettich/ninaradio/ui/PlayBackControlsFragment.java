@@ -76,4 +76,10 @@ public class PlayBackControlsFragment extends Fragment implements View.OnClickLi
         mStationNameTextView.setText(event.station.name);
         mExtraInfoTextView.setText(event.station.url);
     }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        RadioApplication.sBus.unregister(this);
+    }
 }
