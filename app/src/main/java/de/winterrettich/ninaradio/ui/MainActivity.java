@@ -36,6 +36,9 @@ public class MainActivity extends Activity {
 
     private void hidePlaybackControls() {
         getFragmentManager().beginTransaction()
+                .setCustomAnimations(
+                        R.animator.slide_in_from_bottom, R.animator.slide_out_to_bottom,
+                        R.animator.slide_in_from_bottom, R.animator.slide_out_to_bottom)
                 .hide(mControlsFragment)
                 .commit();
     }
