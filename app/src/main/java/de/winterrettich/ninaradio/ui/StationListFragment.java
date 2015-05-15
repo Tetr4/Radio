@@ -2,6 +2,8 @@ package de.winterrettich.ninaradio.ui;
 
 import android.app.Fragment;
 import android.content.Context;
+import android.graphics.drawable.AnimationDrawable;
+import android.graphics.drawable.StateListDrawable;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -9,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -27,6 +30,7 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
     private ListView mListView;
     private StationsListAdapter mAdapter;
     private LinkedList<Station> mStations = new LinkedList<>();
+    private AnimationDrawable mSelectedItemIconAnimation;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -55,7 +59,7 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
             case PAUSE:
                 break;
             case STOP:
-                mListView.setChoiceMode(ListView.CHOICE_MODE_NONE);
+                mListView.clearChoices();
                 mListView.setAdapter(mAdapter);
                 break;
         }
@@ -71,14 +75,26 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        //mListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+
+
+        // Animation
+        if(mSelectedItemIconAnimation != null) {
+            // cancel animation from previous item
+            mSelectedItemIconAnimation.stop();
+        }
+        ImageView icon = (ImageView) view.findViewById(R.id.icon);
+        StateListDrawable stateListDrawable = (StateListDrawable) icon.getDrawable();
+        mSelectedItemIconAnimation = (AnimationDrawable) stateListDrawable.getCurrent();
+        mSelectedItemIconAnimation.setVisible(true, true);
+        mSelectedItemIconAnimation.start();
+
         Station station = (Station) parent.getItemAtPosition(position);
 
         RadioApplication.sBus.post(new SelectStationEvent(station));
         RadioApplication.sBus.post(new PlaybackEvent(PlaybackEvent.Type.PLAY));
     }
 
-    private class StationsListAdapter extends ArrayAdapter<Station> {
+    private static class StationsListAdapter extends ArrayAdapter<Station> {
 
         public StationsListAdapter(Context context, List<Station> objects) {
             super(context, 0, objects);

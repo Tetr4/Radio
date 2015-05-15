@@ -5,15 +5,15 @@
     android:layout_height="@dimen/station_item_height">
 
     <ImageView
-        android:id="@+id/play_eq"
+        android:id="@+id/icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_centerVertical="true"
         android:layout_marginLeft="@dimen/station_item_icon_margin_left"
-        android:tint="@color/station_item_icon_not_playing"
+        android:tint="@color/accent"
         android:contentDescription="@string/play_station"
-        android:src="@drawable/ic_play_arrow_black_36dp"/>
+        android:src="@drawable/station_list_item_icon" />
 
     <LinearLayout
         android:layout_width="match_parent"
