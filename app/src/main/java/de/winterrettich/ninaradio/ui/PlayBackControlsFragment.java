@@ -67,6 +67,8 @@ public class PlayBackControlsFragment extends Fragment implements View.OnClickLi
                 mIsPlaying = false;
                 break;
             case STOP:
+                mPlayPauseButton.setImageDrawable(mPlayDrawable);
+                mIsPlaying = false;
                 break;
         }
     }
