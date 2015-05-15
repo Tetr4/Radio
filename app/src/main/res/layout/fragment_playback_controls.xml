@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:background="@color/playback_controls_card"
     android:padding="@dimen/playback_controls_padding">
     <ImageView
         android:id="@+id/icon"

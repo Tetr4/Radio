@@ -15,6 +15,10 @@
   limitations under the License.
   -->
 <resources>
-    <color name="accent">#00B8D4</color>
-    <color name="station_item_icon_not_playing">#ccc</color>
+    <color name="selected_item">#FFFFFF</color> <!--00B8D4-->
+    <color name="accent">#000000</color> <!--00B8D4-->
+    <color name="activity_background">#92B83E</color> <!--FFA3BA -->
+    <color name="playback_controls_card">#FFFFFF</color> <!-- F2CDD6 -->
+    <color name="actionbar_background">#4F693A</color>
+
 </resources>
