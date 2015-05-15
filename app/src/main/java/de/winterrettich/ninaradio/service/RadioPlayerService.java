@@ -180,9 +180,8 @@ public class RadioPlayerService extends Service implements AudioManager.OnAudioF
 
     @Subscribe
     public void handleDismissNotificationEvent(DismissNotificationEvent event) {
-        // stop service, calls onDestroy
-        Intent intent = new Intent(getApplicationContext(), RadioPlayerService.class);
-        stopService(intent);
+        // same as stop
+        RadioApplication.sBus.post(new PlaybackEvent(PlaybackEvent.Type.STOP));
     }
 
     @Override
