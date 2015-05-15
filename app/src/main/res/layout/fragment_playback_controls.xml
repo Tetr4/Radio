@@ -49,7 +49,7 @@
         android:padding="8dp"
         android:layout_alignParentRight="true"
         style="?android:attr/borderlessButtonStyle"
-        android:src="@drawable/ic_play_arrow_black_36dp"
+        android:src="@drawable/ic_play"
         android:contentDescription="@string/play_pause"
         android:tint="@color/accent"/>
     <!--

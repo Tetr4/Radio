@@ -37,8 +37,8 @@ public class PlayBackControlsFragment extends Fragment implements View.OnClickLi
         mExtraInfoTextView = (TextView) rootView.findViewById(R.id.extra_info);
 
 
-        mPlayDrawable = ContextCompat.getDrawable(getActivity(), R.drawable.ic_play_arrow_black_36dp);
-        mPauseDrawable = ContextCompat.getDrawable(getActivity(), R.drawable.ic_pause_black_36dp);
+        mPlayDrawable = ContextCompat.getDrawable(getActivity(), R.drawable.ic_play);
+        mPauseDrawable = ContextCompat.getDrawable(getActivity(), R.drawable.ic_pause);
 
         RadioApplication.sBus.register(this);
 
