@@ -21,8 +21,28 @@ public class MainActivity extends Activity {
                 .findFragmentById(R.id.fragment_playback_controls);
 
         hidePlaybackControls();
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
         RadioApplication.sBus.register(this);
+
+        // playbackstate may have changed while paused
+        refreshUi();
+    }
+
+    private void refreshUi() {
+        PlaybackEvent.Type currentPlaybackState = RadioApplication.sPlaybackState;
+        if (currentPlaybackState != null) {
+            handlePlaybackEvent(new PlaybackEvent(RadioApplication.sPlaybackState));
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        RadioApplication.sBus.unregister(this);
     }
 
     private void showPlaybackControls() {
@@ -61,11 +81,5 @@ public class MainActivity extends Activity {
                 }
                 break;
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        RadioApplication.sBus.unregister(this);
     }
 }

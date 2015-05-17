@@ -30,14 +30,17 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
     private ListView mListView;
     private StationsListAdapter mAdapter;
     private LinkedList<Station> mStations = new LinkedList<>();
-    private PlaybackEvent.Type mPlaybackState = PlaybackEvent.Type.PLAY;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_station_list, container, false);
 
         mStations.add(new Station("Rock", "http://197.189.206.172:8000/stream"));
-        mStations.add(new Station("Blubb", "http://usa8-vn.mixstream.net:8138"));
+        mStations.add(new Station("Spanisch", "http://usa8-vn.mixstream.net:8138"));
+        mStations.add(new Station("FFN", "http://player.ffn.de/ffnstream.mp3"));
+        mStations.add(new Station("Antenne Niedersachsen", "http://stream.antenne.com/antenne-nds/mp3-128/radioplayer/"));
+        mStations.add(new Station("1Live", "http://gffstream.ic.llnwd.net/stream/gffstream_stream_wdr_einslive_a"));
+        mStations.add(new Station("Radio Gütersloh", "http://edge.live.mp3.mdn.newmedia.nacamar.net/radioguetersloh/livestream.mp3"));
 
         mListView = (ListView) rootView.findViewById(R.id.list_view);
         //mListView.addFooterView();
@@ -45,25 +48,46 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
         mListView.setAdapter(mAdapter);
         mListView.setOnItemClickListener(this);
 
+        return rootView;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
         RadioApplication.sBus.register(this);
 
-        return rootView;
+        // playbackstate and station may have changed while paused
+        refreshUi();
+    }
+
+    private void refreshUi() {
+        PlaybackEvent.Type currentPlaybackState = RadioApplication.sPlaybackState;
+        Station currentStation = RadioApplication.sStation;
+        if (currentPlaybackState != null) {
+            handlePlaybackEvent(new PlaybackEvent(RadioApplication.sPlaybackState));
+        }
+        if (currentStation != null) {
+            handleSelectStationEvent(new SelectStationEvent(RadioApplication.sStation));
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        RadioApplication.sBus.unregister(this);
     }
 
     @Subscribe
     public void handlePlaybackEvent(PlaybackEvent event) {
-        mPlaybackState = event.type;
-        if(event.type == PlaybackEvent.Type.STOP) {
+        if (event.type == PlaybackEvent.Type.STOP) {
             mListView.clearChoices();
         }
         mAdapter.notifyDataSetChanged();
     }
 
-
-
     @Subscribe
     public void handleSelectStationEvent(SelectStationEvent event) {
-        if(mStations.contains(event.station)) {
+        if (mStations.contains(event.station)) {
             int position = mAdapter.getPosition(event.station);
             mListView.setItemChecked(position, true);
             mAdapter.notifyDataSetChanged();
@@ -91,11 +115,8 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
                 convertView = LayoutInflater.from(getContext()).inflate(R.layout.station_list_item, parent, false);
             }
 
-            ImageView icon = (ImageView) convertView.findViewById(R.id.icon);
-            StateListDrawable stateListDrawable = (StateListDrawable) icon.getDrawable();
-
             int checkedPosition = ((ListView) parent).getCheckedItemPosition();
-            if(position == checkedPosition && mPlaybackState == PlaybackEvent.Type.PLAY) {
+            if (position == checkedPosition && RadioApplication.sPlaybackState ==  PlaybackEvent.Type.PLAY) {
                 startIconAnimation(convertView);
             } else {
                 stopIconAnimation(convertView);
@@ -116,7 +137,7 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
 
             if (current instanceof AnimationDrawable) {
                 AnimationDrawable animation = (AnimationDrawable) current;
-                if(!animation.isRunning()) {
+                if (!animation.isRunning()) {
                     animation.setVisible(true, true);
                     animation.start();
                 }
@@ -130,17 +151,11 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
 
             if (current instanceof AnimationDrawable) {
                 AnimationDrawable animation = (AnimationDrawable) current;
-                if(animation.isRunning()) {
+                if (animation.isRunning()) {
                     animation.stop();
                 }
             }
         }
 
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        RadioApplication.sBus.unregister(this);
     }
 }

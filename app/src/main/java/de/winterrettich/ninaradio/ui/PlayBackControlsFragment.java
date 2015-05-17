@@ -16,10 +16,10 @@ import de.winterrettich.ninaradio.R;
 import de.winterrettich.ninaradio.RadioApplication;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
 import de.winterrettich.ninaradio.event.SelectStationEvent;
+import de.winterrettich.ninaradio.model.Station;
 
 public class PlayBackControlsFragment extends Fragment implements View.OnClickListener {
 
-    private boolean mIsPlaying = false;
     private ImageButton mPlayPauseButton;
     private Drawable mPlayDrawable;
     private Drawable mPauseDrawable;
@@ -36,19 +36,42 @@ public class PlayBackControlsFragment extends Fragment implements View.OnClickLi
         mStationNameTextView = (TextView) rootView.findViewById(R.id.title);
         mExtraInfoTextView = (TextView) rootView.findViewById(R.id.extra_info);
 
-
         mPlayDrawable = ContextCompat.getDrawable(getActivity(), R.drawable.ic_play);
         mPauseDrawable = ContextCompat.getDrawable(getActivity(), R.drawable.ic_pause);
 
+        return rootView;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
         RadioApplication.sBus.register(this);
 
-        return rootView;
+        // playbackstate and station may have changed while paused
+        refreshUi();
+    }
+
+    private void refreshUi() {
+        PlaybackEvent.Type currentPlaybackState = RadioApplication.sPlaybackState;
+        Station currentStation = RadioApplication.sStation;
+        if (currentPlaybackState != null) {
+            handlePlaybackEvent(new PlaybackEvent(RadioApplication.sPlaybackState));
+        }
+        if (currentStation != null) {
+            handleSelectStationEvent(new SelectStationEvent(RadioApplication.sStation));
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        RadioApplication.sBus.unregister(this);
     }
 
 
     @Override
     public void onClick(View v) {
-        if (mIsPlaying) {
+        if (RadioApplication.sPlaybackState == PlaybackEvent.Type.PLAY) {
             RadioApplication.sBus.post(new PlaybackEvent(PlaybackEvent.Type.PAUSE));
         } else {
             RadioApplication.sBus.post(new PlaybackEvent(PlaybackEvent.Type.PLAY));
@@ -60,15 +83,12 @@ public class PlayBackControlsFragment extends Fragment implements View.OnClickLi
         switch (event.type) {
             case PLAY:
                 mPlayPauseButton.setImageDrawable(mPauseDrawable);
-                mIsPlaying = true;
                 break;
             case PAUSE:
                 mPlayPauseButton.setImageDrawable(mPlayDrawable);
-                mIsPlaying = false;
                 break;
             case STOP:
                 mPlayPauseButton.setImageDrawable(mPlayDrawable);
-                mIsPlaying = false;
                 break;
         }
     }
@@ -79,9 +99,4 @@ public class PlayBackControlsFragment extends Fragment implements View.OnClickLi
         mExtraInfoTextView.setText(event.station.url);
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        RadioApplication.sBus.unregister(this);
-    }
 }
