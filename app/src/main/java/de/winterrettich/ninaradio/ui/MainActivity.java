@@ -19,8 +19,6 @@ public class MainActivity extends Activity {
 
         mControlsFragment = (PlayBackControlsFragment) getFragmentManager()
                 .findFragmentById(R.id.fragment_playback_controls);
-
-        hidePlaybackControls();
     }
 
     @Override
@@ -28,21 +26,23 @@ public class MainActivity extends Activity {
         super.onResume();
         RadioApplication.sBus.register(this);
 
-        // playbackstate may have changed while paused
+        // Playback state may have changed while paused
         refreshUi();
-    }
-
-    private void refreshUi() {
-        PlaybackEvent.Type currentPlaybackState = RadioApplication.sPlaybackState;
-        if (currentPlaybackState != null) {
-            handlePlaybackEvent(new PlaybackEvent(RadioApplication.sPlaybackState));
-        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         RadioApplication.sBus.unregister(this);
+    }
+
+    private void refreshUi() {
+        PlaybackEvent currentPlaybackState = RadioApplication.sPlaybackState;
+        if (currentPlaybackState != null) {
+            handlePlaybackEvent(RadioApplication.sPlaybackState);
+        } else {
+            hidePlaybackControls();
+        }
     }
 
     private void showPlaybackControls() {
@@ -65,21 +65,14 @@ public class MainActivity extends Activity {
 
     @Subscribe
     public void handlePlaybackEvent(PlaybackEvent event) {
-        switch (event.type) {
-            case PLAY:
-                if (mControlsFragment.isHidden()) {
-                    showPlaybackControls();
-                }
-                break;
-
-            case PAUSE:
-                break;
-
-            case STOP:
-                if (!mControlsFragment.isHidden()) {
-                    hidePlaybackControls();
-                }
-                break;
+        if (event == PlaybackEvent.STOP) {
+            if (!mControlsFragment.isHidden()) {
+                hidePlaybackControls();
+            }
+        } else {
+            if (mControlsFragment.isHidden()) {
+                showPlaybackControls();
+            }
         }
     }
 }

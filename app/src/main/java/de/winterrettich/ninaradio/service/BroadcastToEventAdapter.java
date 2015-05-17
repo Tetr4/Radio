@@ -31,11 +31,11 @@ public class BroadcastToEventAdapter extends BroadcastReceiver {
                 break;
 
             case RadioNotificationManager.ACTION_NOTIFICATION_PLAY:
-                RadioApplication.sBus.post(new PlaybackEvent(PlaybackEvent.Type.PLAY));
+                RadioApplication.sBus.post(PlaybackEvent.PLAY);
                 break;
 
             case RadioNotificationManager.ACTION_NOTIFICATION_PAUSE:
-                RadioApplication.sBus.post(new PlaybackEvent(PlaybackEvent.Type.PAUSE));
+                RadioApplication.sBus.post(PlaybackEvent.PAUSE);
                 break;
         }
     }

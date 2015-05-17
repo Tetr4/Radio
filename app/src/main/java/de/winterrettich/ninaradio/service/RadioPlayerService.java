@@ -39,6 +39,7 @@ import de.winterrettich.ninaradio.model.Station;
  */
 public class RadioPlayerService extends Service implements AudioManager.OnAudioFocusChangeListener {
     public static final String TAG = RadioPlayerService.class.getSimpleName();
+    public static final String EXTRA_STATION = Station.class.getSimpleName();
 
     private MediaSessionCompat mMediaSession;
 
@@ -59,7 +60,7 @@ public class RadioPlayerService extends Service implements AudioManager.OnAudioF
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (mMediaSession == null) {
-            Log.d(TAG, "Starting service");
+            Log.i(TAG, "Starting service");
             initWifiLock();
             //initAudioFocus();
             initMediaSession();
@@ -79,13 +80,12 @@ public class RadioPlayerService extends Service implements AudioManager.OnAudioF
     }
 
     private void handleIntent(Intent intent) {
-        if(intent == null || intent.getExtras() == null) {
+        if (intent == null || intent.getExtras() == null) {
             return;
         }
-        Station station = intent.getExtras().getParcelable("station");
-        Log.d(TAG, "starting with station" + station.name);
+        Station station = intent.getExtras().getParcelable(EXTRA_STATION);
         mRadioNotificationManager.setStation(station);
-        mRadioNotificationManager.setPlaybackState(PlaybackEvent.Type.PLAY);
+        mRadioNotificationManager.setPlaybackState(PlaybackEvent.PLAY);
         mRadioPlayerManager.switchStation(station);
         mRadioPlayerManager.play();
     }
@@ -148,14 +148,14 @@ public class RadioPlayerService extends Service implements AudioManager.OnAudioF
 
     @Subscribe
     public void handlePlaybackEvent(PlaybackEvent event) {
-        switch (event.type) {
+        switch (event) {
             case PLAY:
                 mRadioPlayerManager.play();
-                mRadioNotificationManager.setPlaybackState(PlaybackEvent.Type.PLAY);
+                mRadioNotificationManager.setPlaybackState(PlaybackEvent.PLAY);
                 break;
             case PAUSE:
                 mRadioPlayerManager.pause();
-                mRadioNotificationManager.setPlaybackState(PlaybackEvent.Type.PAUSE);
+                mRadioNotificationManager.setPlaybackState(PlaybackEvent.PAUSE);
                 break;
             case STOP:
                 // stop service, handle player stop and notification dismiss in onDestroy
@@ -175,13 +175,13 @@ public class RadioPlayerService extends Service implements AudioManager.OnAudioF
     public void handleHeadphoneDisconnectEvent(HeadphoneDisconnectEvent event) {
         // pause playback when user accidentally disconnects headphones
         mRadioPlayerManager.pause();
-        mRadioNotificationManager.setPlaybackState(PlaybackEvent.Type.PAUSE);
+        mRadioNotificationManager.setPlaybackState(PlaybackEvent.PAUSE);
     }
 
     @Subscribe
     public void handleDismissNotificationEvent(DismissNotificationEvent event) {
         // same as stop
-        RadioApplication.sBus.post(new PlaybackEvent(PlaybackEvent.Type.STOP));
+        RadioApplication.sBus.post(PlaybackEvent.STOP);
     }
 
     @Override
@@ -194,13 +194,13 @@ public class RadioPlayerService extends Service implements AudioManager.OnAudioF
                 break;
 
             case AudioManager.AUDIOFOCUS_LOSS:
-                RadioApplication.sBus.post(new PlaybackEvent(PlaybackEvent.Type.STOP));
+                RadioApplication.sBus.post(PlaybackEvent.STOP);
                 // Lost focus
                 break;
 
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
                 // Lost focus for a short time
-                RadioApplication.sBus.post(new PlaybackEvent(PlaybackEvent.Type.PAUSE));
+                RadioApplication.sBus.post(PlaybackEvent.PAUSE);
                 break;
 
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:

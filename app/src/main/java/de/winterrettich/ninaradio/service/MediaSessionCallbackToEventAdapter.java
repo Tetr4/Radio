@@ -17,27 +17,31 @@ public class MediaSessionCallbackToEventAdapter extends MediaSessionCompat.Callb
     @Override
     public void onPlay() {
         super.onPlay();
-        RadioApplication.sBus.post(new PlaybackEvent(PlaybackEvent.Type.PLAY));
+        RadioApplication.sBus.post(PlaybackEvent.PLAY);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        RadioApplication.sBus.post(new PlaybackEvent(PlaybackEvent.Type.PAUSE));
+        RadioApplication.sBus.post(PlaybackEvent.PAUSE);
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        RadioApplication.sBus.post(new PlaybackEvent(PlaybackEvent.Type.STOP));
+        RadioApplication.sBus.post(PlaybackEvent.STOP);
     }
 
     @Override
     public void onPlayFromMediaId(String mediaId, Bundle extras) {
-        // FIXME
-        //Station station = extras.getParcelable("station");
-        // Log.e(TAG, "switch station" + station.name);
-        RadioApplication.sBus.post(new SelectStationEvent(new Station("STATION NAME HERE", mediaId)));
+        // TODO Resource
+        Station station;
+        if (extras.containsKey(RadioPlayerService.EXTRA_STATION)) {
+            station = extras.getParcelable(RadioPlayerService.EXTRA_STATION);
+        } else {
+            station = new Station("Unknown Station", mediaId);
+        }
+        RadioApplication.sBus.post(new SelectStationEvent(station));
     }
 
     @Override

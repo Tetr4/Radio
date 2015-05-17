@@ -56,15 +56,15 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
         super.onResume();
         RadioApplication.sBus.register(this);
 
-        // playbackstate and station may have changed while paused
+        // Playback state and station may have changed while paused
         refreshUi();
     }
 
     private void refreshUi() {
-        PlaybackEvent.Type currentPlaybackState = RadioApplication.sPlaybackState;
+        PlaybackEvent currentPlaybackState = RadioApplication.sPlaybackState;
         Station currentStation = RadioApplication.sStation;
         if (currentPlaybackState != null) {
-            handlePlaybackEvent(new PlaybackEvent(RadioApplication.sPlaybackState));
+            handlePlaybackEvent(RadioApplication.sPlaybackState);
         }
         if (currentStation != null) {
             handleSelectStationEvent(new SelectStationEvent(RadioApplication.sStation));
@@ -79,7 +79,7 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
 
     @Subscribe
     public void handlePlaybackEvent(PlaybackEvent event) {
-        if (event.type == PlaybackEvent.Type.STOP) {
+        if (event == PlaybackEvent.STOP) {
             mListView.clearChoices();
         }
         mAdapter.notifyDataSetChanged();
@@ -98,7 +98,7 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Station station = (Station) parent.getItemAtPosition(position);
         RadioApplication.sBus.post(new SelectStationEvent(station));
-        RadioApplication.sBus.post(new PlaybackEvent(PlaybackEvent.Type.PLAY));
+        RadioApplication.sBus.post(PlaybackEvent.PLAY);
     }
 
     private class StationsListAdapter extends ArrayAdapter<Station> {
@@ -116,7 +116,7 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
             }
 
             int checkedPosition = ((ListView) parent).getCheckedItemPosition();
-            if (position == checkedPosition && RadioApplication.sPlaybackState ==  PlaybackEvent.Type.PLAY) {
+            if (position == checkedPosition && RadioApplication.sPlaybackState == PlaybackEvent.PLAY) {
                 startIconAnimation(convertView);
             } else {
                 stopIconAnimation(convertView);

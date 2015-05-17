@@ -14,8 +14,8 @@ import de.winterrettich.ninaradio.service.RadioPlayerService;
 
 public class RadioApplication extends Application {
     public static Bus sBus = new Bus(ThreadEnforcer.MAIN);
-    public static PlaybackEvent.Type sPlaybackState = null;
-    public static Station sStation;
+    public static PlaybackEvent sPlaybackState = null;
+    public static Station sStation = null;
 
     @Override
     public void onCreate() {
@@ -25,16 +25,16 @@ public class RadioApplication extends Application {
 
     @Subscribe
     public void handlePlaybackEvent(PlaybackEvent event) {
-        sPlaybackState = event.type;
+        sPlaybackState = event;
 
-        switch (event.type) {
+        switch (event) {
             case PLAY:
-                if(sStation == null) {
+                if (sStation == null) {
                     throw new IllegalStateException("Select a Station before playing");
                 }
 
                 Intent serviceIntent = new Intent(this, RadioPlayerService.class);
-                serviceIntent.putExtra("station", sStation);
+                serviceIntent.putExtra(RadioPlayerService.EXTRA_STATION, sStation);
                 startService(serviceIntent);
                 break;
 //            case STOP:

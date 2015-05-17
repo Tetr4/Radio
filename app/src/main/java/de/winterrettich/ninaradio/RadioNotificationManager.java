@@ -19,9 +19,9 @@ import de.winterrettich.ninaradio.ui.MainActivity;
  */
 public class RadioNotificationManager {
     private static final int NOTIFICATION_ID = 1;
-    public static final String ACTION_NOTIFICATION_DISMISS = BuildConfig.APPLICATION_ID + "ACTION_NOTIFICATION_DISMISS";
-    public static final String ACTION_NOTIFICATION_PLAY = BuildConfig.APPLICATION_ID + "ACTION_NOTIFICATION_PLAY";
-    public static final String ACTION_NOTIFICATION_PAUSE = BuildConfig.APPLICATION_ID + "ACTION_NOTIFICATION_PAUSE";
+    public static final String ACTION_NOTIFICATION_DISMISS = BuildConfig.APPLICATION_ID + ".ACTION_NOTIFICATION_DISMISS";
+    public static final String ACTION_NOTIFICATION_PLAY = BuildConfig.APPLICATION_ID + ".ACTION_NOTIFICATION_PLAY";
+    public static final String ACTION_NOTIFICATION_PAUSE = BuildConfig.APPLICATION_ID + ".ACTION_NOTIFICATION_PAUSE";
 
     private NotificationManager mNotificationManager;
     private PendingIntent mMainIntent;
@@ -32,7 +32,7 @@ public class RadioNotificationManager {
     private Context mContext;
     private MediaSessionCompat mMediaSession;
     private Station mStation = new Station("", "");
-    private PlaybackEvent.Type mPlaybackState = PlaybackEvent.Type.PLAY;
+    private PlaybackEvent mPlaybackState = PlaybackEvent.PLAY;
 
 
     public RadioNotificationManager(Context context, MediaSessionCompat mediaSession) {
@@ -53,7 +53,7 @@ public class RadioNotificationManager {
     }
 
     private PendingIntent createBroadcastIntent(String action) {
-        Intent intent =  new Intent(mContext, BroadcastToEventAdapter.class);
+        Intent intent = new Intent(mContext, BroadcastToEventAdapter.class);
         intent.setAction(action);
         return PendingIntent.getBroadcast(mContext,
                 NOTIFICATION_ID, intent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -62,17 +62,17 @@ public class RadioNotificationManager {
     public void showNotification() {
         // TODO Resources etc.
         Notification.Builder builder = new Notification.Builder(mContext)
-                //.setCategory(Notification.CATEGORY_TRANSPORT);
                 .setWhen(0)
-                .setPriority(Notification.PRIORITY_MAX)
+                .setPriority(Notification.PRIORITY_HIGH)
                 .setOnlyAlertOnce(true)
-                .setSmallIcon(R.mipmap.ic_launcher)
+                //.setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.radio_icon)
                 .setContentTitle(mStation.name)
                 .setContentText(mStation.url)
                 .setContentIntent(mMainIntent)
                 .setDeleteIntent(mDismissIntent);
 
-        if(mPlaybackState == PlaybackEvent.Type.PLAY) {
+        if (mPlaybackState == PlaybackEvent.PLAY) {
             builder.addAction(R.drawable.ic_pause, "Pause", mPauseIntent)
                     .setOngoing(true);
         } else {
@@ -81,10 +81,11 @@ public class RadioNotificationManager {
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            Notification.MediaStyle style = new Notification.MediaStyle();
             MediaSession.Token token = (MediaSession.Token) mMediaSession.getSessionToken().getToken();
+            Notification.MediaStyle style = new Notification.MediaStyle();
             style.setMediaSession(token);
-            builder.setStyle(style);
+            builder.setStyle(style)
+                    .setCategory(Notification.CATEGORY_TRANSPORT);
         }
 
         mNotificationManager.notify(NOTIFICATION_ID, builder.build());
@@ -99,7 +100,7 @@ public class RadioNotificationManager {
         showNotification();
     }
 
-    public void setPlaybackState(PlaybackEvent.Type playbackState) {
+    public void setPlaybackState(PlaybackEvent playbackState) {
         mPlaybackState = playbackState;
         showNotification();
     }

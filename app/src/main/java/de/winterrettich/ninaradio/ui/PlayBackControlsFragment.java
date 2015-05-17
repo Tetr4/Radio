@@ -47,19 +47,8 @@ public class PlayBackControlsFragment extends Fragment implements View.OnClickLi
         super.onResume();
         RadioApplication.sBus.register(this);
 
-        // playbackstate and station may have changed while paused
+        // Playback state and station may have changed while paused
         refreshUi();
-    }
-
-    private void refreshUi() {
-        PlaybackEvent.Type currentPlaybackState = RadioApplication.sPlaybackState;
-        Station currentStation = RadioApplication.sStation;
-        if (currentPlaybackState != null) {
-            handlePlaybackEvent(new PlaybackEvent(RadioApplication.sPlaybackState));
-        }
-        if (currentStation != null) {
-            handleSelectStationEvent(new SelectStationEvent(RadioApplication.sStation));
-        }
     }
 
     @Override
@@ -68,19 +57,29 @@ public class PlayBackControlsFragment extends Fragment implements View.OnClickLi
         RadioApplication.sBus.unregister(this);
     }
 
+    private void refreshUi() {
+        PlaybackEvent currentPlaybackState = RadioApplication.sPlaybackState;
+        Station currentStation = RadioApplication.sStation;
+        if (currentPlaybackState != null) {
+            handlePlaybackEvent(RadioApplication.sPlaybackState);
+        }
+        if (currentStation != null) {
+            handleSelectStationEvent(new SelectStationEvent(RadioApplication.sStation));
+        }
+    }
 
     @Override
     public void onClick(View v) {
-        if (RadioApplication.sPlaybackState == PlaybackEvent.Type.PLAY) {
-            RadioApplication.sBus.post(new PlaybackEvent(PlaybackEvent.Type.PAUSE));
+        if (RadioApplication.sPlaybackState == PlaybackEvent.PLAY) {
+            RadioApplication.sBus.post(PlaybackEvent.PAUSE);
         } else {
-            RadioApplication.sBus.post(new PlaybackEvent(PlaybackEvent.Type.PLAY));
+            RadioApplication.sBus.post(PlaybackEvent.PLAY);
         }
     }
 
     @Subscribe
     public void handlePlaybackEvent(PlaybackEvent event) {
-        switch (event.type) {
+        switch (event) {
             case PLAY:
                 mPlayPauseButton.setImageDrawable(mPauseDrawable);
                 break;

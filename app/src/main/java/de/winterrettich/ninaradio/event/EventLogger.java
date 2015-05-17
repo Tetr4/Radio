@@ -6,14 +6,15 @@ import com.squareup.otto.Subscribe;
 
 public class EventLogger {
     private static final String TAG = EventLogger.class.getSimpleName();
+
     @Subscribe
     public void handlePlaybackEvent(PlaybackEvent event) {
-        Log.i(TAG, PlaybackEvent.class.getSimpleName() + ": " + event.type.name() );
+        Log.i(TAG, PlaybackEvent.class.getSimpleName() + ": " + event.name());
     }
 
     @Subscribe
     public void handleSelectStationEvent(SelectStationEvent event) {
-        Log.i(TAG, SelectStationEvent.class.getSimpleName() + ": " + event.station.name + " -> " + event.station.url );
+        Log.i(TAG, SelectStationEvent.class.getSimpleName() + ": " + event.station.name + " -> " + event.station.url);
     }
 
     @Subscribe
