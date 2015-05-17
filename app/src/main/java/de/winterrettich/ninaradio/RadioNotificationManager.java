@@ -62,15 +62,14 @@ public class RadioNotificationManager {
     public void showNotification() {
         // TODO Resources etc.
         Notification.Builder builder = new Notification.Builder(mContext)
-                .setWhen(0)
-                .setPriority(Notification.PRIORITY_HIGH)
-                .setOnlyAlertOnce(true)
-                //.setSmallIcon(R.mipmap.ic_launcher)
-                .setSmallIcon(R.drawable.radio_icon)
+                .setSmallIcon(R.drawable.ic_radio)
                 .setContentTitle(mStation.name)
                 .setContentText(mStation.url)
                 .setContentIntent(mMainIntent)
-                .setDeleteIntent(mDismissIntent);
+                .setDeleteIntent(mDismissIntent)
+                .setWhen(0)
+                .setPriority(Notification.PRIORITY_HIGH)
+                .setOnlyAlertOnce(true);
 
         if (mPlaybackState == PlaybackEvent.PLAY) {
             builder.addAction(R.drawable.ic_pause, "Pause", mPauseIntent)
@@ -85,7 +84,8 @@ public class RadioNotificationManager {
             Notification.MediaStyle style = new Notification.MediaStyle();
             style.setMediaSession(token);
             builder.setStyle(style)
-                    .setCategory(Notification.CATEGORY_TRANSPORT);
+                    .setCategory(Notification.CATEGORY_TRANSPORT)
+            .setShowWhen(false);
         }
 
         mNotificationManager.notify(NOTIFICATION_ID, builder.build());
