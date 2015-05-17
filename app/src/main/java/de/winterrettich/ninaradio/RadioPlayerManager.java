@@ -13,7 +13,7 @@ import de.winterrettich.ninaradio.model.Station;
 /**
  * encapsulates a {@link MediaPlayer}
  */
-public class RadioPlayerManager implements MediaPlayer.OnBufferingUpdateListener, MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener {
+public class RadioPlayerManager implements MediaPlayer.OnPreparedListener {
     public static final String TAG = RadioPlayerManager.class.getSimpleName();
     private Context mContext;
     private MediaPlayer mPlayer;
@@ -21,7 +21,6 @@ public class RadioPlayerManager implements MediaPlayer.OnBufferingUpdateListener
     private boolean isPreparing = false;
     private boolean isPaused = false;
     private boolean cancelStart = false;
-
 
     public RadioPlayerManager(Context context) {
         mContext = context;
@@ -32,19 +31,8 @@ public class RadioPlayerManager implements MediaPlayer.OnBufferingUpdateListener
         mPlayer = new MediaPlayer();
         mPlayer.setWakeMode(mContext, PowerManager.PARTIAL_WAKE_LOCK);
         mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        mPlayer.setOnBufferingUpdateListener(this);
         mPlayer.setOnPreparedListener(this);
-        mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        mPlayer.setOnBufferingUpdateListener(this);
-        mPlayer.setOnPreparedListener(this);
-        mPlayer.setOnErrorListener(this);
         Log.d(TAG, "State: idle");
-    }
-
-    @Override
-    public void onBufferingUpdate(MediaPlayer mp, int percent) {
-        // playSeekBar.setSecondaryProgress(percent);
-        Log.i(TAG, "Buffering: " + percent + "%");
     }
 
     @Override
@@ -60,54 +48,58 @@ public class RadioPlayerManager implements MediaPlayer.OnBufferingUpdateListener
     }
 
     public void play() {
-        cancelStart = false;
-
         if (mStation == null) {
             throw new IllegalStateException("Select a Station before playing");
         }
-        if (isPreparing) {
+
+        cancelStart = false;
+
+        if(mPlayer.isPlaying()) {
+            Log.d(TAG, "already playing");
+        } else if (isPreparing) {
             Log.d(TAG, "already called prepareAsync");
-            return;
-        }
-        if (isPaused) {
-            // already prepared -> just resume without prepare
-            Log.d(TAG, "resume without prepare");
+        } else if (isPaused) {
+            Log.d(TAG, "resume");
             mPlayer.start();
             Log.d(TAG, "State: started");
         } else {
-            isPreparing = true;
-            mPlayer.prepareAsync();
             Log.d(TAG, "preparing async");
-        }
-    }
-
-    public void pause() {
-        if (mPlayer != null) {
-            if (mPlayer.isPlaying()) {
-                mPlayer.pause();
-                isPaused = true;
-                Log.d(TAG, "State: paused");
-            } else {
-                Log.d(TAG, "Player already paused");
-                // not playing but prepareAsync may be called -> prevent starting in onPrepared
-                cancelStart = true;
+            isPreparing = true;
+            try {
+                mPlayer.prepareAsync();
+            } catch (IllegalStateException e) {
+                // FIXME prepareAsync called in state 8
+                Log.e(TAG, "Could not prepare", e);
+                e.printStackTrace();
             }
         }
     }
 
-    public void stop() {
-        if (mPlayer != null) {
-            // cancel starting after prepareAsync callback
+    public void pause() {
+        if (mPlayer.isPlaying()) {
+            Log.d(TAG, "pausing");
+            mPlayer.pause();
+            Log.d(TAG, "State: paused");
+        } else {
+            Log.d(TAG, "already paused");
+            // not playing but prepareAsync may be called -> prevent starting in onPrepared
             cancelStart = true;
-            mPlayer.release();
-            Log.d(TAG, "Player released");
         }
-        //initPlayer();
+        isPaused = true;
+    }
+
+    public void stop() {
+        Log.d(TAG, "stopping");
+        // cancel starting after prepareAsync callback
+        cancelStart = true;
+        mPlayer.release();
+        Log.d(TAG, "State: released");
     }
 
     public void switchStation(Station station) {
         mStation = station;
-        if(mPlayer.isPlaying()) {
+        if (mPlayer.isPlaying()) {
+            Log.d(TAG, "stopping before switch");
             mPlayer.stop();
         }
         mPlayer.reset();
@@ -115,6 +107,7 @@ public class RadioPlayerManager implements MediaPlayer.OnBufferingUpdateListener
         isPreparing = false;
         cancelStart = false;
 
+        Log.d(TAG, "switching station");
         try {
             mPlayer.setDataSource(station.url);
         } catch (IOException e) {
@@ -123,8 +116,8 @@ public class RadioPlayerManager implements MediaPlayer.OnBufferingUpdateListener
         Log.d(TAG, "State: initialized");
     }
 
-    @Override
-    public boolean onError(MediaPlayer mp, int what, int extra) {
-        return false;
+    public void setVolume(float volume) {
+        mPlayer.setVolume(volume, volume);
     }
+
 }

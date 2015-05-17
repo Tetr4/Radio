@@ -19,6 +19,7 @@ import de.winterrettich.ninaradio.BuildConfig;
 import de.winterrettich.ninaradio.RadioApplication;
 import de.winterrettich.ninaradio.RadioNotificationManager;
 import de.winterrettich.ninaradio.RadioPlayerManager;
+import de.winterrettich.ninaradio.event.AdjustVolumeEvent;
 import de.winterrettich.ninaradio.event.DismissNotificationEvent;
 import de.winterrettich.ninaradio.event.EventLogger;
 import de.winterrettich.ninaradio.event.HeadphoneDisconnectEvent;
@@ -40,17 +41,16 @@ import de.winterrettich.ninaradio.model.Station;
 public class RadioPlayerService extends Service implements AudioManager.OnAudioFocusChangeListener {
     public static final String TAG = RadioPlayerService.class.getSimpleName();
     public static final String EXTRA_STATION = Station.class.getSimpleName();
+    private static final float DUCK_VOLUME = 0.15f;
 
     private MediaSessionCompat mMediaSession;
-
     private WifiManager.WifiLock mWifiLock;
-
     private BroadcastToEventAdapter mReceiver;
+    private EventLogger mLogger;
 
     private RadioNotificationManager mRadioNotificationManager;
     private RadioPlayerManager mRadioPlayerManager;
-    private EventLogger mLogger;
-
+    private AudioManager mAudioManager;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -62,7 +62,7 @@ public class RadioPlayerService extends Service implements AudioManager.OnAudioF
         if (mMediaSession == null) {
             Log.i(TAG, "Starting service");
             initWifiLock();
-            //initAudioFocus();
+            initAudioFocus();
             initMediaSession();
             initBroadCastReceiver();
 
@@ -90,6 +90,19 @@ public class RadioPlayerService extends Service implements AudioManager.OnAudioF
         mRadioPlayerManager.play();
     }
 
+    @Override
+    public void onDestroy() {
+        RadioApplication.sBus.unregister(this);
+        RadioApplication.sBus.unregister(mLogger);
+        unregisterReceiver(mReceiver);
+        mAudioManager.abandonAudioFocus(this);
+
+        mRadioNotificationManager.hideNotification();
+        mRadioPlayerManager.stop();
+        mWifiLock.release();
+        mMediaSession.release();
+    }
+
     private void initBroadCastReceiver() {
         mReceiver = new BroadcastToEventAdapter();
 
@@ -103,17 +116,15 @@ public class RadioPlayerService extends Service implements AudioManager.OnAudioF
     }
 
     private void initWifiLock() {
-        // FIXME
         mWifiLock = ((WifiManager) getSystemService(WIFI_SERVICE))
                 .createWifiLock(WifiManager.WIFI_MODE_FULL, BuildConfig.APPLICATION_ID);
         mWifiLock.acquire();
     }
 
     private void initAudioFocus() {
-        // FIXME
         // request AudioFocus + callbacks
-        AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
-        int result = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC,
+        mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+        int result = mAudioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC,
                 AudioManager.AUDIOFOCUS_GAIN);
         if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
             Log.w(TAG, "Could not get audio focus");
@@ -184,13 +195,17 @@ public class RadioPlayerService extends Service implements AudioManager.OnAudioF
         RadioApplication.sBus.post(PlaybackEvent.STOP);
     }
 
+    @Subscribe
+    public void handleAdjustVolumeEvent(AdjustVolumeEvent event) {
+        mRadioPlayerManager.setVolume(event.volume);
+    }
+
     @Override
     public void onAudioFocusChange(int focusChange) {
-        // FIXME events
+        // TODO as adapter in own file?
         switch (focusChange) {
             case AudioManager.AUDIOFOCUS_GAIN:
-                // FIXME
-                //mMediaController.adjustVolume(1.0f, 1.0f);
+                RadioApplication.sBus.post(new AdjustVolumeEvent(1.0f));
                 break;
 
             case AudioManager.AUDIOFOCUS_LOSS:
@@ -205,21 +220,9 @@ public class RadioPlayerService extends Service implements AudioManager.OnAudioF
 
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
                 // Lost focus for a short time but can play at low volume
-                // FIXME
                 // mMediaController.adjustVolume(0.1f, 0.1f);
+                RadioApplication.sBus.post(new AdjustVolumeEvent(DUCK_VOLUME));
                 break;
         }
     }
-
-    @Override
-    public void onDestroy() {
-        RadioApplication.sBus.unregister(this);
-        RadioApplication.sBus.unregister(mLogger);
-        unregisterReceiver(mReceiver);
-        mRadioNotificationManager.hideNotification();
-        mRadioPlayerManager.stop();
-        mWifiLock.release();
-        mMediaSession.release();
-    }
-
 }
