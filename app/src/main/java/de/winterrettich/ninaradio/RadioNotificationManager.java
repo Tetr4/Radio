@@ -63,7 +63,8 @@ public class RadioNotificationManager {
         // TODO Resources etc.
         Notification.Builder builder = new Notification.Builder(mContext)
                 //.setCategory(Notification.CATEGORY_TRANSPORT);
-                .setOngoing(false)
+                .setWhen(0)
+                .setPriority(Notification.PRIORITY_MAX)
                 .setOnlyAlertOnce(true)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(mStation.name)
@@ -72,9 +73,11 @@ public class RadioNotificationManager {
                 .setDeleteIntent(mDismissIntent);
 
         if(mPlaybackState == PlaybackEvent.Type.PLAY) {
-            builder.addAction(R.drawable.ic_pause, "Pause", mPauseIntent);
+            builder.addAction(R.drawable.ic_pause, "Pause", mPauseIntent)
+                    .setOngoing(true);
         } else {
-            builder.addAction(R.drawable.ic_play, "Play", mPlayIntent);
+            builder.addAction(R.drawable.ic_play, "Play", mPlayIntent)
+                    .setOngoing(false);
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
