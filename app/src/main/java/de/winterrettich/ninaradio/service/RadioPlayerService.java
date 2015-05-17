@@ -92,6 +92,7 @@ public class RadioPlayerService extends Service implements AudioManager.OnAudioF
 
     @Override
     public void onDestroy() {
+        super.onDestroy();
         RadioApplication.sBus.unregister(this);
         RadioApplication.sBus.unregister(mLogger);
         unregisterReceiver(mReceiver);
@@ -169,9 +170,9 @@ public class RadioPlayerService extends Service implements AudioManager.OnAudioF
                 mRadioNotificationManager.setPlaybackState(PlaybackEvent.PAUSE);
                 break;
             case STOP:
-                // stop service, handle player stop and notification dismiss in onDestroy
-                Intent intent = new Intent(getApplicationContext(), RadioPlayerService.class);
-                stopService(intent);
+                // service will be stopped in application for now
+                // player stop and notification dismiss is handled in onDestroy
+                // TODO restart at some point?
                 break;
         }
     }

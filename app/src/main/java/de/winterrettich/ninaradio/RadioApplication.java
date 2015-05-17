@@ -32,15 +32,18 @@ public class RadioApplication extends Application {
                 if (sStation == null) {
                     throw new IllegalStateException("Select a Station before playing");
                 }
-
+                // start service
                 Intent serviceIntent = new Intent(this, RadioPlayerService.class);
                 serviceIntent.putExtra(RadioPlayerService.EXTRA_STATION, sStation);
                 startService(serviceIntent);
                 break;
-//            case STOP:
-//                Intent intent = new Intent(getApplicationContext(), RadioPlayerService.class);
-//                stopService(intent);
-//                break;
+
+            case STOP:
+                // stop service
+                Intent intent = new Intent(getApplicationContext(), RadioPlayerService.class);
+                stopService(intent);
+                sStation = null;
+                break;
         }
     }
 
