@@ -2,6 +2,6 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android" android:enterFadeDuration="@android:integer/config_mediumAnimTime" android:exitFadeDuration="@android:integer/config_mediumAnimTime">
 
     <item android:drawable="@drawable/ic_equalizer" android:state_activated="true" />
-    <item android:drawable="@drawable/radiobutton" />
+    <item android:drawable="@drawable/ic_radio" />
 
 </selector>
