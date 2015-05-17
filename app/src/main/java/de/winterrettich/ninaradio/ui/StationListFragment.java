@@ -60,21 +60,22 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
         refreshUi();
     }
 
-    private void refreshUi() {
-        PlaybackEvent currentPlaybackState = RadioApplication.sPlaybackState;
-        Station currentStation = RadioApplication.sStation;
-        if (currentPlaybackState != null) {
-            handlePlaybackEvent(RadioApplication.sPlaybackState);
-        }
-        if (currentStation != null) {
-            handleSelectStationEvent(new SelectStationEvent(RadioApplication.sStation));
-        }
-    }
-
     @Override
     public void onPause() {
         super.onPause();
         RadioApplication.sBus.unregister(this);
+    }
+
+    private void refreshUi() {
+        PlaybackEvent currentPlaybackState = RadioApplication.sPlaybackState;
+        if (currentPlaybackState != null) {
+            handlePlaybackEvent(RadioApplication.sPlaybackState);
+        }
+
+        Station currentStation = RadioApplication.sStation;
+        if (currentStation != null) {
+            handleSelectStationEvent(new SelectStationEvent(RadioApplication.sStation));
+        }
     }
 
     @Subscribe
@@ -89,9 +90,12 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
     public void handleSelectStationEvent(SelectStationEvent event) {
         if (mStations.contains(event.station)) {
             int position = mAdapter.getPosition(event.station);
+            mListView.smoothScrollToPosition(position);
             mListView.setItemChecked(position, true);
-            mAdapter.notifyDataSetChanged();
+        } else {
+            mListView.clearChoices();
         }
+        mAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -115,8 +119,10 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
                 convertView = LayoutInflater.from(getContext()).inflate(R.layout.station_list_item, parent, false);
             }
 
+            // start icon animation if checked and playing
             int checkedPosition = ((ListView) parent).getCheckedItemPosition();
-            if (position == checkedPosition && RadioApplication.sPlaybackState == PlaybackEvent.PLAY) {
+            convertView.setActivated(position == checkedPosition);
+            if (convertView.isActivated() && RadioApplication.sPlaybackState == PlaybackEvent.PLAY) {
                 startIconAnimation(convertView);
             } else {
                 stopIconAnimation(convertView);
@@ -130,30 +136,29 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
             return convertView;
         }
 
-        private void startIconAnimation(View view) {
+        private AnimationDrawable findIconAnimationDrawable(View view) {
             ImageView icon = (ImageView) view.findViewById(R.id.icon);
             StateListDrawable stateListDrawable = (StateListDrawable) icon.getDrawable();
             Drawable current = stateListDrawable.getCurrent();
 
             if (current instanceof AnimationDrawable) {
-                AnimationDrawable animation = (AnimationDrawable) current;
-                if (!animation.isRunning()) {
-                    animation.setVisible(true, true);
-                    animation.start();
-                }
+                return (AnimationDrawable) current;
+            }
+            return null;
+        }
+
+        private void startIconAnimation(View view) {
+            AnimationDrawable animation = findIconAnimationDrawable(view);
+            if (animation != null && !animation.isRunning()) {
+                animation.setVisible(true, true);
+                animation.start();
             }
         }
 
         private void stopIconAnimation(View view) {
-            ImageView icon = (ImageView) view.findViewById(R.id.icon);
-            StateListDrawable stateListDrawable = (StateListDrawable) icon.getDrawable();
-            Drawable current = stateListDrawable.getCurrent();
-
-            if (current instanceof AnimationDrawable) {
-                AnimationDrawable animation = (AnimationDrawable) current;
-                if (animation.isRunning()) {
-                    animation.stop();
-                }
+            AnimationDrawable animation = findIconAnimationDrawable(view);
+            if (animation != null && animation.isRunning()) {
+                animation.stop();
             }
         }
 

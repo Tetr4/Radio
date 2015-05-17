@@ -12,9 +12,28 @@ public class Station implements Parcelable {
         this.url = url;
     }
 
-    public Station(Parcel in){
+    public Station(Parcel in) {
         this.name = in.readString();
         this.url = in.readString();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if(other == null) return false;
+        if(other == this) return true;
+        if(! (other instanceof  Station)) return false;
+        Station otherStation = (Station) other;
+        return name.equals(otherStation.name) && url.equals(otherStation.url);
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode() * url.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return name + "(" + url + ")";
     }
 
     @Override
