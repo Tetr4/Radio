@@ -10,6 +10,11 @@
     <dimen name="playback_controls_margin">12dp</dimen>
     <dimen name="playback_controls_elevation">6dp</dimen>
 
+    <!-- Notification -->
+    <dimen name="notification_icon_size">38dp</dimen>
+    <dimen name="notification_icon_padding">8dp</dimen>
+
+    <!-- Station Item -->
     <dimen name="station_item_height">72dp</dimen>
     <dimen name="station_item_icon_margin_left">12dp</dimen>
     <dimen name="station_item_text_margin_left">60dp</dimen>

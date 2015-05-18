@@ -5,4 +5,6 @@
     <string name="current_url">Url of currently playing station</string>
     <string name="play_station">Play station</string>
     <string name="play_pause">play or pause</string>
+    <string name="pause">pause</string>
+    <string name="play">play</string>
 </resources>

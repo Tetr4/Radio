@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/playback_controls_padding">
+    <ImageView
+        android:id="@+id/icon"
+        android:src="@drawable/ic_radio"
+        android:layout_width="@dimen/notification_icon_size"
+        android:layout_height="@dimen/notification_icon_size"
+        android:padding="@dimen/notification_icon_padding"
+        android:scaleType="centerCrop"
+        android:contentDescription="@string/current_station"
+        android:layout_centerVertical="true"
+        android:layout_alignParentLeft="true"/>
+    <LinearLayout
+        android:id="@+id/content"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/playback_controls_icon_horizontal_margin"
+        android:orientation="vertical"
+        android:layout_toRightOf="@id/icon"
+        android:layout_toLeftOf="@+id/play_pause"
+        android:layout_centerVertical="true">
+        <TextView
+            android:id="@+id/title"
+            tools:text="Rock Station"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/current_station"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="?android:attr/textColorPrimary"/>
+        <TextView
+            android:id="@+id/extra_info"
+            tools:text="http://197.189.206.172:8000/stream"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/current_url"
+            android:textAppearance="?android:attr/textAppearanceSmall"/>
+    </LinearLayout>
+    <ImageButton
+        android:id="@+id/play_pause"
+        android:layout_centerVertical="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:layout_alignParentRight="true"
+        style="?android:attr/borderlessButtonStyle"
+        android:src="@drawable/ic_play"
+        android:contentDescription="@string/play_pause"/>
+
+</RelativeLayout>

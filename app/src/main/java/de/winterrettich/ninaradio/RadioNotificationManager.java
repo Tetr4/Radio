@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.media.session.MediaSession;
 import android.os.Build;
 import android.support.v4.media.session.MediaSessionCompat;
+import android.widget.RemoteViews;
 
 import de.winterrettich.ninaradio.event.PlaybackEvent;
 import de.winterrettich.ninaradio.model.Station;
@@ -60,7 +61,6 @@ public class RadioNotificationManager {
     }
 
     public void showNotification() {
-        // TODO Resources etc.
         Notification.Builder builder = new Notification.Builder(mContext)
                 .setSmallIcon(R.drawable.ic_radio)
                 .setContentTitle(mStation.name)
@@ -71,21 +71,45 @@ public class RadioNotificationManager {
                 .setPriority(Notification.PRIORITY_HIGH)
                 .setOnlyAlertOnce(true);
 
-        if (mPlaybackState == PlaybackEvent.PLAY) {
-            builder.addAction(R.drawable.ic_pause, "Pause", mPauseIntent)
-                    .setOngoing(true);
-        } else {
-            builder.addAction(R.drawable.ic_play, "Play", mPlayIntent)
-                    .setOngoing(false);
-        }
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            // use media style
+
             MediaSession.Token token = (MediaSession.Token) mMediaSession.getSessionToken().getToken();
-            Notification.MediaStyle style = new Notification.MediaStyle();
-            style.setMediaSession(token);
+
+            Notification.MediaStyle style = new Notification.MediaStyle()
+                    .setMediaSession(token)
+                    .setShowActionsInCompactView(0);
+
+            if (mPlaybackState == PlaybackEvent.PLAY) {
+                builder.addAction(R.drawable.ic_pause, mContext.getString(R.string.pause), mPauseIntent)
+                        .setOngoing(true);
+            } else {
+                builder.addAction(R.drawable.ic_play, mContext.getString(R.string.play), mPlayIntent)
+                        .setOngoing(false);
+            }
+
             builder.setStyle(style)
                     .setCategory(Notification.CATEGORY_TRANSPORT)
-            .setShowWhen(false);
+                    .setShowWhen(false);
+        } else {
+            // Use remote view
+
+            RemoteViews notificationView = new RemoteViews(mContext.getPackageName(),
+                    R.layout.notification_playback_controls);
+            notificationView.setTextViewText(R.id.title, mStation.name);
+            notificationView.setTextViewText(R.id.extra_info, mStation.url);
+
+            if (mPlaybackState == PlaybackEvent.PLAY) {
+                notificationView.setImageViewResource(R.id.play_pause, R.drawable.ic_pause);
+                notificationView.setOnClickPendingIntent(R.id.play_pause, mPauseIntent);
+                builder.setOngoing(true);
+            } else {
+                notificationView.setImageViewResource(R.id.play_pause, R.drawable.ic_play);
+                notificationView.setOnClickPendingIntent(R.id.play_pause, mPlayIntent);
+                builder.setOngoing(false);
+            }
+
+            builder.setContent(notificationView);
         }
 
         mNotificationManager.notify(NOTIFICATION_ID, builder.build());
