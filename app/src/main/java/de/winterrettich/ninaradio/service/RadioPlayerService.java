@@ -17,14 +17,14 @@ import com.squareup.otto.Subscribe;
 
 import de.winterrettich.ninaradio.BuildConfig;
 import de.winterrettich.ninaradio.RadioApplication;
-import de.winterrettich.ninaradio.RadioNotificationManager;
-import de.winterrettich.ninaradio.RadioPlayerManager;
 import de.winterrettich.ninaradio.event.AdjustVolumeEvent;
 import de.winterrettich.ninaradio.event.DismissNotificationEvent;
 import de.winterrettich.ninaradio.event.EventLogger;
 import de.winterrettich.ninaradio.event.HeadphoneDisconnectEvent;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
 import de.winterrettich.ninaradio.event.SelectStationEvent;
+import de.winterrettich.ninaradio.event.adapter.BroadcastToEventAdapter;
+import de.winterrettich.ninaradio.event.adapter.MediaSessionCallbackToEventAdapter;
 import de.winterrettich.ninaradio.model.Station;
 
 /**

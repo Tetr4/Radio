@@ -1,4 +1,4 @@
-package de.winterrettich.ninaradio.service;
+package de.winterrettich.ninaradio.event.adapter;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,6 +8,7 @@ import de.winterrettich.ninaradio.RadioApplication;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
 import de.winterrettich.ninaradio.event.SelectStationEvent;
 import de.winterrettich.ninaradio.model.Station;
+import de.winterrettich.ninaradio.service.RadioPlayerService;
 
 /**
  * Convert media session callbacks to events

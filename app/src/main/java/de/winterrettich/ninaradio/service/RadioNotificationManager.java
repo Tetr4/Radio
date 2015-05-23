@@ -1,4 +1,4 @@
-package de.winterrettich.ninaradio;
+package de.winterrettich.ninaradio.service;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -10,9 +10,11 @@ import android.os.Build;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.widget.RemoteViews;
 
+import de.winterrettich.ninaradio.BuildConfig;
+import de.winterrettich.ninaradio.R;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
+import de.winterrettich.ninaradio.event.adapter.BroadcastToEventAdapter;
 import de.winterrettich.ninaradio.model.Station;
-import de.winterrettich.ninaradio.service.BroadcastToEventAdapter;
 import de.winterrettich.ninaradio.ui.MainActivity;
 
 /**

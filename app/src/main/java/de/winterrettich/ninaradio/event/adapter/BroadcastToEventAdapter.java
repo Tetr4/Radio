@@ -1,4 +1,4 @@
-package de.winterrettich.ninaradio.service;
+package de.winterrettich.ninaradio.event.adapter;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -7,10 +7,10 @@ import android.media.AudioManager;
 import android.util.Log;
 
 import de.winterrettich.ninaradio.RadioApplication;
-import de.winterrettich.ninaradio.RadioNotificationManager;
 import de.winterrettich.ninaradio.event.DismissNotificationEvent;
 import de.winterrettich.ninaradio.event.HeadphoneDisconnectEvent;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
+import de.winterrettich.ninaradio.service.RadioNotificationManager;
 
 /**
  * Convert broadcasts to events

@@ -1,4 +1,4 @@
-package de.winterrettich.ninaradio;
+package de.winterrettich.ninaradio.service;
 
 import android.content.Context;
 import android.media.AudioManager;
@@ -54,7 +54,7 @@ public class RadioPlayerManager implements MediaPlayer.OnPreparedListener {
 
         cancelStart = false;
 
-        if(mPlayer.isPlaying()) {
+        if (mPlayer.isPlaying()) {
             Log.d(TAG, "already playing");
         } else if (isPreparing) {
             Log.d(TAG, "already called prepareAsync");

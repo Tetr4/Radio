@@ -30,7 +30,7 @@
 
         <service android:name=".service.RadioPlayerService" />
 
-        <receiver android:name=".service.BroadcastToEventAdapter">
+        <receiver android:name=".event.adapter.BroadcastToEventAdapter">
             <intent-filter>
                 <!-- user accidentally disconnects headphones -->
                 <action android:name="android.media.AUDIO_BECOMING_NOISY" />
