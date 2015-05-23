@@ -59,8 +59,9 @@ public class RadioPlayerService extends Service implements AudioManager.OnAudioF
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, flags, startId);
+
         if (mMediaSession == null) {
-            Log.i(TAG, "Starting service");
             initWifiLock();
             initAudioFocus();
             initMediaSession();
@@ -76,14 +77,18 @@ public class RadioPlayerService extends Service implements AudioManager.OnAudioF
             handleIntent(intent);
         }
 
-        return super.onStartCommand(intent, flags, startId);
+        // restart with last station after being killed because of low memory
+        return START_REDELIVER_INTENT;
     }
 
     private void handleIntent(Intent intent) {
         if (intent == null || intent.getExtras() == null) {
+            Log.i(TAG, "Service started without station");
             return;
         }
+
         Station station = intent.getExtras().getParcelable(EXTRA_STATION);
+        Log.i(TAG, "Service started with station: " + station.name);
         mRadioNotificationManager.setStation(station);
         mRadioNotificationManager.setPlaybackState(PlaybackEvent.PLAY);
         mRadioPlayerManager.switchStation(station);
@@ -102,6 +107,14 @@ public class RadioPlayerService extends Service implements AudioManager.OnAudioF
         mRadioPlayerManager.stop();
         mWifiLock.release();
         mMediaSession.release();
+
+        Log.i(TAG, "Service destroyed");
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        super.onTaskRemoved(rootIntent);
+        stopSelf();
     }
 
     private void initBroadCastReceiver() {
@@ -170,6 +183,7 @@ public class RadioPlayerService extends Service implements AudioManager.OnAudioF
                 mRadioNotificationManager.setPlaybackState(PlaybackEvent.PAUSE);
                 break;
             case STOP:
+                //stopSelf();
                 // service will be stopped in application for now
                 // player stop and notification dismiss is handled in onDestroy
                 // TODO restart at some point?
