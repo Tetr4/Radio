@@ -18,17 +18,19 @@ import com.squareup.otto.Subscribe;
 import de.winterrettich.ninaradio.BuildConfig;
 import de.winterrettich.ninaradio.RadioApplication;
 import de.winterrettich.ninaradio.event.AdjustVolumeEvent;
+import de.winterrettich.ninaradio.event.AudioFocusEvent;
 import de.winterrettich.ninaradio.event.DismissNotificationEvent;
 import de.winterrettich.ninaradio.event.EventLogger;
 import de.winterrettich.ninaradio.event.HeadphoneDisconnectEvent;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
 import de.winterrettich.ninaradio.event.SelectStationEvent;
+import de.winterrettich.ninaradio.event.adapter.AudioFocusCallbackToEventAdapter;
 import de.winterrettich.ninaradio.event.adapter.BroadcastToEventAdapter;
 import de.winterrettich.ninaradio.event.adapter.MediaSessionCallbackToEventAdapter;
 import de.winterrettich.ninaradio.model.Station;
 
 /**
- * Service which controls a {@link RadioNotificationManager} and a {@link RadioPlayerManager} via various internal and external callbacks:
+ * Service which controls a {@link RadioNotificationManager} and a {@link RadioPlayerManager} via various events:
  * <ul>
  * <li>AudioFocus gain and loss</li>
  * <li>WifiLock</li>
@@ -38,7 +40,7 @@ import de.winterrettich.ninaradio.model.Station;
  * <li>Notification callbacks (dismiss, play, pause)</li>
  * </ul>
  */
-public class RadioPlayerService extends Service implements AudioManager.OnAudioFocusChangeListener {
+public class RadioPlayerService extends Service {
     public static final String TAG = RadioPlayerService.class.getSimpleName();
     public static final String EXTRA_STATION = Station.class.getSimpleName();
     private static final float DUCK_VOLUME = 0.15f;
@@ -46,6 +48,7 @@ public class RadioPlayerService extends Service implements AudioManager.OnAudioF
     private MediaSessionCompat mMediaSession;
     private WifiManager.WifiLock mWifiLock;
     private BroadcastToEventAdapter mReceiver;
+    private AudioFocusCallbackToEventAdapter mAudioFocusCallback;
     private EventLogger mLogger;
 
     private RadioNotificationManager mRadioNotificationManager;
@@ -101,7 +104,7 @@ public class RadioPlayerService extends Service implements AudioManager.OnAudioF
         RadioApplication.sBus.unregister(this);
         RadioApplication.sBus.unregister(mLogger);
         unregisterReceiver(mReceiver);
-        mAudioManager.abandonAudioFocus(this);
+        mAudioManager.abandonAudioFocus(mAudioFocusCallback);
 
         mRadioNotificationManager.hideNotification();
         mRadioPlayerManager.stop();
@@ -137,9 +140,12 @@ public class RadioPlayerService extends Service implements AudioManager.OnAudioF
 
     private void initAudioFocus() {
         // request AudioFocus + callbacks
+        mAudioFocusCallback = new AudioFocusCallbackToEventAdapter();
+
         mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
-        int result = mAudioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC,
+        int result = mAudioManager.requestAudioFocus(mAudioFocusCallback, AudioManager.STREAM_MUSIC,
                 AudioManager.AUDIOFOCUS_GAIN);
+
         if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
             Log.w(TAG, "Could not get audio focus");
         }
@@ -215,29 +221,27 @@ public class RadioPlayerService extends Service implements AudioManager.OnAudioF
         mRadioPlayerManager.setVolume(event.volume);
     }
 
-    @Override
-    public void onAudioFocusChange(int focusChange) {
-        // TODO as adapter in own file?
-        switch (focusChange) {
-            case AudioManager.AUDIOFOCUS_GAIN:
+    @Subscribe
+    public void handleAudioFocusEvent(AudioFocusEvent event) {
+        switch (event) {
+            case AUDIOFOCUS_GAIN:
                 RadioApplication.sBus.post(new AdjustVolumeEvent(1.0f));
                 break;
 
-            case AudioManager.AUDIOFOCUS_LOSS:
+            case AUDIOFOCUS_LOSS:
                 RadioApplication.sBus.post(PlaybackEvent.STOP);
-                // Lost focus
                 break;
 
-            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+            case AUDIOFOCUS_LOSS_TRANSIENT:
                 // Lost focus for a short time
                 RadioApplication.sBus.post(PlaybackEvent.PAUSE);
                 break;
 
-            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+            case AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
                 // Lost focus for a short time but can play at low volume
-                // mMediaController.adjustVolume(0.1f, 0.1f);
                 RadioApplication.sBus.post(new AdjustVolumeEvent(DUCK_VOLUME));
                 break;
         }
     }
+
 }
