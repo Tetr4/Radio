@@ -19,9 +19,9 @@ public class Station implements Parcelable {
 
     @Override
     public boolean equals(Object other) {
-        if(other == null) return false;
-        if(other == this) return true;
-        if(! (other instanceof  Station)) return false;
+        if (other == null) return false;
+        if (other == this) return true;
+        if (!(other instanceof Station)) return false;
         Station otherStation = (Station) other;
         return name.equals(otherStation.name) && url.equals(otherStation.url);
     }
