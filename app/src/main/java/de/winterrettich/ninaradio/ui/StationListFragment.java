@@ -13,6 +13,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Space;
 import android.widget.TextView;
 
 import com.squareup.otto.Subscribe;
@@ -41,9 +42,19 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
         mStations.add(new Station("Antenne Niedersachsen", "http://stream.antenne.com/antenne-nds/mp3-128/radioplayer/"));
         mStations.add(new Station("1Live", "http://gffstream.ic.llnwd.net/stream/gffstream_stream_wdr_einslive_a"));
         mStations.add(new Station("Radio Gütersloh", "http://edge.live.mp3.mdn.newmedia.nacamar.net/radioguetersloh/livestream.mp3"));
+        mStations.add(new Station("Rock2", "http://197.189.206.172:8000/stream"));
+        mStations.add(new Station("Rock3", "http://197.189.206.172:8000/stream"));
+        mStations.add(new Station("Rock4", "http://197.189.206.172:8000/stream"));
+        mStations.add(new Station("Rock5", "http://197.189.206.172:8000/stream"));
 
         mListView = (ListView) rootView.findViewById(R.id.list_view);
-        //mListView.addFooterView();
+
+        // footer to prevent last item being covered by playback controls
+        Space footer = new Space(getActivity());
+        float footerHeight = getResources().getDimension(R.dimen.station_list_footer_height);
+        footer.setLayoutParams(new ListView.LayoutParams(ListView.LayoutParams.MATCH_PARENT, (int) footerHeight));
+        mListView.addFooterView(footer);
+
         mAdapter = new StationsListAdapter(getActivity(), mStations);
         mListView.setAdapter(mAdapter);
         mListView.setOnItemClickListener(this);

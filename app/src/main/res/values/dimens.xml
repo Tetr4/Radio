@@ -3,7 +3,7 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
 
-    <!-- playback controls -->
+    <!-- Playback controls -->
     <dimen name="playback_controls_icon_horizontal_margin">8dp</dimen>
     <dimen name="playback_controls_icon_size">64dp</dimen>
     <dimen name="playback_controls_padding">8dp</dimen>
@@ -14,8 +14,9 @@
     <dimen name="notification_icon_size">38dp</dimen>
     <dimen name="notification_icon_padding">8dp</dimen>
 
-    <!-- Station Item -->
+    <!-- Station list -->
     <dimen name="station_item_height">72dp</dimen>
     <dimen name="station_item_icon_margin_left">12dp</dimen>
     <dimen name="station_item_text_margin_left">60dp</dimen>
+    <dimen name="station_list_footer_height">80dp</dimen>
 </resources>
