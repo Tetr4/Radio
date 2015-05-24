@@ -18,5 +18,5 @@
     <dimen name="station_item_height">72dp</dimen>
     <dimen name="station_item_icon_margin_left">12dp</dimen>
     <dimen name="station_item_text_margin_left">60dp</dimen>
-    <dimen name="station_list_footer_height">80dp</dimen>
+    <dimen name="station_list_footer_height">106dp</dimen>
 </resources>

@@ -9,10 +9,8 @@
         android:name="de.winterrettich.ninaradio.ui.StationListFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="@dimen/activity_vertical_margin"
         android:layout_marginLeft="@dimen/activity_horizontal_margin"
         android:layout_marginRight="@dimen/activity_horizontal_margin"
-        android:layout_marginTop="@dimen/activity_vertical_margin"
         tools:layout="@layout/fragment_station_list" />
 
     <!-- Layout needed for correct relative positioning in animation -->
@@ -23,10 +21,10 @@
 
         <fragment
             android:id="@+id/fragment_playback_controls"
-            android:layout_margin="@dimen/playback_controls_margin"
             android:name="de.winterrettich.ninaradio.ui.PlayBackControlsFragment"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_margin="@dimen/playback_controls_margin"
             tools:layout="@layout/fragment_playback_controls" />
     </FrameLayout>
 
