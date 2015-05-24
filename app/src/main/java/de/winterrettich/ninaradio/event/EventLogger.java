@@ -27,4 +27,14 @@ public class EventLogger {
         Log.i(TAG, DismissNotificationEvent.class.getSimpleName());
     }
 
+    @Subscribe
+    public void handleAdjustVolumeEvent(AdjustVolumeEvent event) {
+        Log.i(TAG, AdjustVolumeEvent.class.getSimpleName() + ": " + event.volume);
+    }
+
+    @Subscribe
+    public void handleAudioFocusEvent(AudioFocusEvent event) {
+        Log.i(TAG, AudioFocusEvent.class.getSimpleName() + ": " + event.name());
+    }
+
 }
