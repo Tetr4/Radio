@@ -19,6 +19,7 @@ public class MainActivity extends Activity {
 
         mControlsFragment = (PlayBackControlsFragment) getFragmentManager()
                 .findFragmentById(R.id.fragment_playback_controls);
+
     }
 
     @Override
@@ -48,7 +49,6 @@ public class MainActivity extends Activity {
     private void showPlaybackControls() {
         getFragmentManager().beginTransaction()
                 .setCustomAnimations(
-                        R.animator.slide_in_from_bottom, R.animator.slide_out_to_bottom,
                         R.animator.slide_in_from_bottom, R.animator.slide_out_to_bottom)
                 .show(mControlsFragment)
                 .commit();
@@ -57,7 +57,6 @@ public class MainActivity extends Activity {
     private void hidePlaybackControls() {
         getFragmentManager().beginTransaction()
                 .setCustomAnimations(
-                        R.animator.slide_in_from_bottom, R.animator.slide_out_to_bottom,
                         R.animator.slide_in_from_bottom, R.animator.slide_out_to_bottom)
                 .hide(mControlsFragment)
                 .commit();
