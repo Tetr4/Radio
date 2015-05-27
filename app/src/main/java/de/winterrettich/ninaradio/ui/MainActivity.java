@@ -1,7 +1,7 @@
 package de.winterrettich.ninaradio.ui;
 
-import android.app.Activity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 
 import com.squareup.otto.Subscribe;
 
@@ -9,7 +9,7 @@ import de.winterrettich.ninaradio.R;
 import de.winterrettich.ninaradio.RadioApplication;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
     private PlayBackControlsFragment mControlsFragment;
 
     @Override
@@ -19,6 +19,11 @@ public class MainActivity extends Activity {
 
         mControlsFragment = (PlayBackControlsFragment) getFragmentManager()
                 .findFragmentById(R.id.fragment_playback_controls);
+
+        colorizeStatusBar();
+    }
+
+    private void colorizeStatusBar() {
 
     }
 
