@@ -1,5 +1,6 @@
 package de.winterrettich.ninaradio.ui;
 
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
@@ -20,11 +21,8 @@ public class MainActivity extends AppCompatActivity {
         mControlsFragment = (PlayBackControlsFragment) getFragmentManager()
                 .findFragmentById(R.id.fragment_playback_controls);
 
-        colorizeStatusBar();
-    }
-
-    private void colorizeStatusBar() {
-
+        // change music stream volume while activity is running
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
     }
 
     @Override
