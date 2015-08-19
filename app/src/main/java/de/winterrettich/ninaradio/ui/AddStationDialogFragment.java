@@ -48,7 +48,7 @@ public class AddStationDialogFragment extends DialogFragment {
 
                         // validate name and url
                         boolean error = false;
-                        if (name.isEmpty()) {
+                        if (name.isEmpty()) { // TODO check if name already exists
                             nameEditText.setError(getString(R.string.invalid_name));
                             error = true;
                         }
