@@ -44,6 +44,10 @@ public class RadioPlayerService extends Service {
     public static final String TAG = RadioPlayerService.class.getSimpleName();
     public static final String EXTRA_STATION = Station.class.getSimpleName();
     private static final float DUCK_VOLUME = 0.15f;
+    private float mLastVolume;
+    private boolean mResumeAfterGain;
+    private boolean mAdjustVolumeAfterGain;
+    private boolean mSkipOverwrite;
 
     private MediaSessionCompat mMediaSession;
     private WifiManager.WifiLock mWifiLock;
@@ -85,7 +89,7 @@ public class RadioPlayerService extends Service {
     }
 
     private void handleIntent(Intent intent) {
-        if (intent == null || intent.getExtras() == null) {
+        if (intent == null || intent.getExtras() == null || !intent.getExtras().containsKey(EXTRA_STATION)) {
             Log.i(TAG, "Service started without station");
             return;
         }
@@ -149,6 +153,8 @@ public class RadioPlayerService extends Service {
         if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
             Log.w(TAG, "Could not get audio focus");
         }
+
+        mLastVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
     }
 
     private void initMediaSession() {
@@ -179,6 +185,15 @@ public class RadioPlayerService extends Service {
 
     @Subscribe
     public void handlePlaybackEvent(PlaybackEvent event) {
+        // TODO refactor to something better
+        if (mSkipOverwrite) {
+            // this event pauses playback, just after focus loss
+            mSkipOverwrite = false;
+        } else {
+            // external event (e.g. user input while during focus loss)
+            mResumeAfterGain = false;  // overwrite autoresume after focus loss
+        }
+
         switch (event) {
             case PLAY:
                 mRadioPlayerManager.play();
@@ -206,8 +221,7 @@ public class RadioPlayerService extends Service {
     @Subscribe
     public void handleHeadphoneDisconnectEvent(HeadphoneDisconnectEvent event) {
         // pause playback when user accidentally disconnects headphones
-        mRadioPlayerManager.pause();
-        mRadioNotificationManager.setPlaybackState(PlaybackEvent.PAUSE);
+        RadioApplication.sBus.post(PlaybackEvent.PAUSE);
     }
 
     @Subscribe
@@ -218,6 +232,15 @@ public class RadioPlayerService extends Service {
 
     @Subscribe
     public void handleAdjustVolumeEvent(AdjustVolumeEvent event) {
+        // TODO refactor to something better
+        if (mSkipOverwrite) {
+            // this event sets the duck volume, just after focus loss
+            mSkipOverwrite = false;
+        } else {
+            // external event (e.g. user input while during focus loss)
+            mAdjustVolumeAfterGain = false; // overwrite duck volume
+        }
+
         mRadioPlayerManager.setVolume(event.volume);
     }
 
@@ -225,7 +248,13 @@ public class RadioPlayerService extends Service {
     public void handleAudioFocusEvent(AudioFocusEvent event) {
         switch (event) {
             case AUDIOFOCUS_GAIN:
-                RadioApplication.sBus.post(new AdjustVolumeEvent(1.0f));
+                if (mResumeAfterGain) {
+                    // resume playback
+                    RadioApplication.sBus.post(PlaybackEvent.PLAY);
+                } else if (mAdjustVolumeAfterGain) {
+                    // raise volume
+                    RadioApplication.sBus.post(new AdjustVolumeEvent(mLastVolume));
+                }
                 break;
 
             case AUDIOFOCUS_LOSS:
@@ -234,12 +263,17 @@ public class RadioPlayerService extends Service {
 
             case AUDIOFOCUS_LOSS_TRANSIENT:
                 // Lost focus for a short time
+                mResumeAfterGain = RadioApplication.sPlaybackState == PlaybackEvent.PLAY;
+                mSkipOverwrite = true;
                 RadioApplication.sBus.post(PlaybackEvent.PAUSE);
                 break;
 
             case AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
                 // Lost focus for a short time but can play at low volume
-                RadioApplication.sBus.post(new AdjustVolumeEvent(DUCK_VOLUME));
+                mLastVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+                mAdjustVolumeAfterGain = true;
+                mSkipOverwrite = true;
+                RadioApplication.sBus.post(new AdjustVolumeEvent(Math.min(DUCK_VOLUME, mLastVolume)));
                 break;
         }
     }
