@@ -15,7 +15,7 @@ import de.winterrettich.ninaradio.model.Station;
 /**
  * encapsulates a {@link MediaPlayer}
  */
-public class RadioPlayerManager implements MediaPlayer.OnPreparedListener {
+public class RadioPlayerManager implements MediaPlayer.OnPreparedListener, MediaPlayer.OnInfoListener {
     public static final String TAG = RadioPlayerManager.class.getSimpleName();
     private Context mContext;
     private MediaPlayer mPlayer;
@@ -34,6 +34,7 @@ public class RadioPlayerManager implements MediaPlayer.OnPreparedListener {
         mPlayer.setWakeMode(mContext, PowerManager.PARTIAL_WAKE_LOCK);
         mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         mPlayer.setOnPreparedListener(this);
+        mPlayer.setOnInfoListener(this);
         Log.d(TAG, "State: idle");
     }
 
@@ -68,13 +69,12 @@ public class RadioPlayerManager implements MediaPlayer.OnPreparedListener {
         } else {
             Log.d(TAG, "preparing async");
             isPreparing = true;
-            // TODO try ExoPlayer, because MediaPlayer doesn't provide buffer info for webradio streams
             RadioApplication.sBus.post(BufferEvent.BUFFERING);
             try {
                 mPlayer.prepareAsync();
             } catch (IllegalStateException e) {
                 // FIXME prepareAsync called in state 8
-                RadioApplication.sBus.post(BufferEvent.BUFFERING);
+                RadioApplication.sBus.post(BufferEvent.DONE);
                 Log.e(TAG, "Could not prepare", e);
                 e.printStackTrace();
             }
@@ -124,6 +124,20 @@ public class RadioPlayerManager implements MediaPlayer.OnPreparedListener {
 
     public void setVolume(float volume) {
         mPlayer.setVolume(volume, volume);
+    }
+
+    @Override
+    public boolean onInfo(MediaPlayer mp, int what, int extra) {
+        switch (what) {
+            case MediaPlayer.MEDIA_INFO_BUFFERING_START:
+                RadioApplication.sBus.post(BufferEvent.BUFFERING);
+                break;
+            case MediaPlayer.MEDIA_INFO_BUFFERING_END:
+                RadioApplication.sBus.post(BufferEvent.DONE);
+                break;
+        }
+
+        return false;
     }
 
 }
