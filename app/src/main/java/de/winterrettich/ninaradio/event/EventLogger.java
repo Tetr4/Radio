@@ -42,4 +42,9 @@ public class EventLogger {
         Log.i(TAG, BufferEvent.class.getSimpleName() + ": " + event.name());
     }
 
+    @Subscribe
+    public void handleAddStationEvent(AddStationEvent event) {
+        Log.i(TAG, AddStationEvent.class.getSimpleName() + ": " + event.station.name + " -> " + event.station.url);
+    }
+
 }

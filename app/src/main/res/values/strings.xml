@@ -3,8 +3,16 @@
 
     <string name="current_station">Station currently playing</string>
     <string name="current_url">Url of currently playing station</string>
+
     <string name="play_station">Play station</string>
     <string name="play_pause">play or pause</string>
     <string name="pause">pause</string>
     <string name="play">play</string>
+
+    <string name="add_station">Add station</string>
+
+    <string name="station_name_hint">FFN</string>
+    <string name="station_url_hint">http://player.ffn.de/ffnstream.mp3</string>
+    <string name="invalid_name">Please enter a name</string>
+    <string name="invalid_url">This is not a valid URL</string>
 </resources>

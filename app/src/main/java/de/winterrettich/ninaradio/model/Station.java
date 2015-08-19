@@ -2,8 +2,9 @@ package de.winterrettich.ninaradio.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
-public class Station implements Parcelable {
+public class Station implements Parcelable, Comparable<Station> {
     public String name;
     public String url;
 
@@ -59,4 +60,10 @@ public class Station implements Parcelable {
             return new Station[size];
         }
     };
+
+    @Override
+    public int compareTo(@NonNull Station another) {
+        // compare lexographically
+        return name.compareToIgnoreCase(another.name);
+    }
 }

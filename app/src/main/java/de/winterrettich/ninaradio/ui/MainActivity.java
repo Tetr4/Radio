@@ -4,6 +4,8 @@ import android.media.AudioManager;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuItem;
 
 import com.squareup.otto.Subscribe;
 
@@ -33,7 +35,6 @@ public class MainActivity extends AppCompatActivity {
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
     }
 
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -47,6 +48,26 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         RadioApplication.sBus.unregister(this);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_add_station:
+                showAddStationDialog();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void showAddStationDialog() {
+        new AddStationDialogFragment().show(getFragmentManager(), "AddStationDialog");
     }
 
     private void refreshUi() {

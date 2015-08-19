@@ -2,6 +2,7 @@ package de.winterrettich.ninaradio.ui;
 
 import android.app.Fragment;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -15,25 +16,48 @@ import android.widget.TextView;
 
 import com.squareup.otto.Subscribe;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import de.winterrettich.ninaradio.R;
 import de.winterrettich.ninaradio.RadioApplication;
+import de.winterrettich.ninaradio.event.AddStationEvent;
 import de.winterrettich.ninaradio.event.BufferEvent;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
 import de.winterrettich.ninaradio.event.SelectStationEvent;
 import de.winterrettich.ninaradio.model.Station;
 
 public class StationListFragment extends Fragment implements AdapterView.OnItemClickListener {
+    public static final String STATIONS_PREFERENCE = "STATIONS_PREFERENCE";
     private ListView mListView;
     private StationsListAdapter mAdapter;
     private LinkedList<Station> mStations = new LinkedList<>();
+    private SharedPreferences mSharedPreferences;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_station_list, container, false);
 
+        mSharedPreferences = getActivity().getSharedPreferences(STATIONS_PREFERENCE, Context.MODE_PRIVATE);
+        if (mSharedPreferences.getAll().isEmpty()) {
+            loadDefaultStations();
+        } else {
+            loadSavedStations();
+        }
+
+
+        mListView = (ListView) rootView.findViewById(R.id.list_view);
+
+        mAdapter = new StationsListAdapter(getActivity(), mStations);
+        mListView.setAdapter(mAdapter);
+        mListView.setOnItemClickListener(this);
+
+        return rootView;
+    }
+
+    private void loadDefaultStations() {
         mStations.add(new Station("Rock", "http://197.189.206.172:8000/stream"));
         mStations.add(new Station("Spanisch", "http://usa8-vn.mixstream.net:8138"));
         mStations.add(new Station("FFN", "http://player.ffn.de/ffnstream.mp3"));
@@ -44,14 +68,30 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
         mStations.add(new Station("Rock3", "http://197.189.206.172:8000/stream"));
         mStations.add(new Station("Rock4", "http://197.189.206.172:8000/stream"));
         mStations.add(new Station("Rock5", "http://197.189.206.172:8000/stream"));
+        Collections.sort(mStations);
+    }
 
-        mListView = (ListView) rootView.findViewById(R.id.list_view);
+    private void loadSavedStations() {
+        for (Map.Entry<String, ?> entry : mSharedPreferences.getAll().entrySet()) {
+            String name = entry.getKey();
+            String url = (String) entry.getValue();
+            mStations.add(new Station(name, url));
+        }
+        Collections.sort(mStations);
+    }
 
-        mAdapter = new StationsListAdapter(getActivity(), mStations);
-        mListView.setAdapter(mAdapter);
-        mListView.setOnItemClickListener(this);
+    private void saveStations() {
+        SharedPreferences.Editor editor = mSharedPreferences.edit();
+        for (Station station : mStations) {
+            editor.putString(station.name, station.url);
+        }
+        editor.commit();
+    }
 
-        return rootView;
+    @Subscribe
+    public void handleAddStationEvent(AddStationEvent event) {
+        mStations.add(event.station);
+        Collections.sort(mStations);
     }
 
     @Override
@@ -67,6 +107,7 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
     public void onPause() {
         super.onPause();
         RadioApplication.sBus.unregister(this);
+        saveStations();
     }
 
     private void refreshUi() {
