@@ -2,6 +2,7 @@ package de.winterrettich.ninaradio.ui;
 
 import android.media.AudioManager;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 
 import com.squareup.otto.Subscribe;
@@ -18,12 +19,20 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setLogo(R.mipmap.ic_launcher);
+            actionBar.setDisplayUseLogoEnabled(true);
+            actionBar.setDisplayShowHomeEnabled(true);
+        }
+
         mControlsFragment = (PlayBackControlsFragment) getFragmentManager()
                 .findFragmentById(R.id.fragment_playback_controls);
 
         // change music stream volume while activity is running
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
     }
+
 
     @Override
     protected void onResume() {
@@ -41,12 +50,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void refreshUi() {
-        PlaybackEvent currentPlaybackState = RadioApplication.sPlaybackState;
-        if (currentPlaybackState != null) {
-            handlePlaybackEvent(RadioApplication.sPlaybackState);
-        } else {
-            hidePlaybackControls();
-        }
+        handlePlaybackEvent(RadioApplication.sPlaybackState);
     }
 
     private void showPlaybackControls() {
@@ -77,4 +81,5 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
 }

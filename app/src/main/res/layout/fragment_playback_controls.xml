@@ -1,70 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:custom="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/controls_container"
-    android:layout_width="match_parent"
+<android.support.design.widget.FloatingActionButton
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/fab"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    custom:cardElevation="@dimen/playback_controls_elevation">
-
-    <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@color/playback_controls_card"
-        android:padding="@dimen/playback_controls_padding">
-
-        <ImageView
-            android:id="@+id/icon"
-            android:layout_width="@dimen/playback_controls_icon_size"
-            android:layout_height="@dimen/playback_controls_icon_size"
-            android:layout_alignParentLeft="true"
-            android:contentDescription="@string/current_station"
-            android:scaleType="centerCrop"
-            android:src="@mipmap/ic_launcher" />
-
-        <LinearLayout
-            android:id="@+id/content"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:layout_marginLeft="@dimen/playback_controls_icon_horizontal_margin"
-            android:layout_toLeftOf="@+id/play_pause"
-            android:layout_toRightOf="@id/icon"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:contentDescription="@string/current_station"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:textColor="?android:attr/textColorPrimary"
-                tools:text="Rock Station" />
-
-            <TextView
-                android:id="@+id/extra_info"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:contentDescription="@string/current_url"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textAppearance="?android:attr/textAppearanceSmall"
-                tools:text="http://197.189.206.172:8000/stream" />
-        </LinearLayout>
-
-        <ImageButton
-            android:id="@+id/play_pause"
-            style="?android:attr/borderlessButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:layout_centerVertical="true"
-            android:contentDescription="@string/play_pause"
-            android:padding="8dp"
-            android:src="@drawable/ic_play"
-            android:tint="@color/accent" />
-    </RelativeLayout>
-
-</android.support.v7.widget.CardView>
+    android:src="@drawable/ic_play"
+    app:borderWidth="0dp"
+    app:fabSize="normal" />

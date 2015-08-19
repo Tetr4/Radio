@@ -3,44 +3,44 @@ package de.winterrettich.ninaradio.ui;
 import android.app.Fragment;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
-import android.widget.TextView;
 
 import com.squareup.otto.Subscribe;
 
 import de.winterrettich.ninaradio.R;
 import de.winterrettich.ninaradio.RadioApplication;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
-import de.winterrettich.ninaradio.event.SelectStationEvent;
-import de.winterrettich.ninaradio.model.Station;
 
 public class PlayBackControlsFragment extends Fragment implements View.OnClickListener {
 
-    private ImageButton mPlayPauseButton;
     private Drawable mPlayDrawable;
     private Drawable mPauseDrawable;
-    private TextView mStationNameTextView;
-    private TextView mExtraInfoTextView;
+    private FloatingActionButton mFloatingActionButton;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_playback_controls, container, false);
 
-        mPlayPauseButton = (ImageButton) rootView.findViewById(R.id.play_pause);
-        mPlayPauseButton.setOnClickListener(this);
+        mFloatingActionButton = (FloatingActionButton) rootView.findViewById(R.id.fab);
+        mFloatingActionButton.setOnClickListener(this);
 
-        mStationNameTextView = (TextView) rootView.findViewById(R.id.title);
-        mExtraInfoTextView = (TextView) rootView.findViewById(R.id.extra_info);
+//        Snackbar
+//                .make(findViewById(R.id.root_layout),
+//                        "This is Snackbar",
+//                        Snackbar.LENGTH_LONG)
+//                .setAction("Action", this)
+//                .show(); // Do not forget to show!
 
         mPlayDrawable = ContextCompat.getDrawable(getActivity(), R.drawable.ic_play);
         mPauseDrawable = ContextCompat.getDrawable(getActivity(), R.drawable.ic_pause);
 
         return rootView;
     }
+
 
     @Override
     public void onResume() {
@@ -58,14 +58,7 @@ public class PlayBackControlsFragment extends Fragment implements View.OnClickLi
     }
 
     private void refreshUi() {
-        PlaybackEvent currentPlaybackState = RadioApplication.sPlaybackState;
-        Station currentStation = RadioApplication.sStation;
-        if (currentPlaybackState != null) {
-            handlePlaybackEvent(RadioApplication.sPlaybackState);
-        }
-        if (currentStation != null) {
-            handleSelectStationEvent(new SelectStationEvent(RadioApplication.sStation));
-        }
+        handlePlaybackEvent(RadioApplication.sPlaybackState);
     }
 
     @Override
@@ -81,21 +74,15 @@ public class PlayBackControlsFragment extends Fragment implements View.OnClickLi
     public void handlePlaybackEvent(PlaybackEvent event) {
         switch (event) {
             case PLAY:
-                mPlayPauseButton.setImageDrawable(mPauseDrawable);
+                mFloatingActionButton.setImageDrawable(mPauseDrawable);
                 break;
             case PAUSE:
-                mPlayPauseButton.setImageDrawable(mPlayDrawable);
+                mFloatingActionButton.setImageDrawable(mPlayDrawable);
                 break;
             case STOP:
-                mPlayPauseButton.setImageDrawable(mPlayDrawable);
+                mFloatingActionButton.setImageDrawable(mPlayDrawable);
                 break;
         }
-    }
-
-    @Subscribe
-    public void handleSelectStationEvent(SelectStationEvent event) {
-        mStationNameTextView.setText(event.station.name);
-        mExtraInfoTextView.setText(event.station.url);
     }
 
 }
