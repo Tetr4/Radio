@@ -8,6 +8,7 @@ import com.squareup.otto.Subscribe;
 import com.squareup.otto.ThreadEnforcer;
 
 import de.winterrettich.ninaradio.event.BufferEvent;
+import de.winterrettich.ninaradio.event.EventLogger;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
 import de.winterrettich.ninaradio.event.SelectStationEvent;
 import de.winterrettich.ninaradio.model.Station;
@@ -18,11 +19,14 @@ public class RadioApplication extends Application {
     public static PlaybackEvent sPlaybackState = PlaybackEvent.STOP;
     public static BufferEvent sBufferingState = BufferEvent.DONE;
     public static Station sStation = null;
+    private EventLogger mLogger;
 
     @Override
     public void onCreate() {
         super.onCreate();
         sBus.register(this);
+        mLogger = new EventLogger();
+        sBus.register(mLogger);
     }
 
     @Subscribe

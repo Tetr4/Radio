@@ -20,7 +20,6 @@ import de.winterrettich.ninaradio.RadioApplication;
 import de.winterrettich.ninaradio.event.AdjustVolumeEvent;
 import de.winterrettich.ninaradio.event.AudioFocusEvent;
 import de.winterrettich.ninaradio.event.DismissNotificationEvent;
-import de.winterrettich.ninaradio.event.EventLogger;
 import de.winterrettich.ninaradio.event.HeadphoneDisconnectEvent;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
 import de.winterrettich.ninaradio.event.SelectStationEvent;
@@ -53,7 +52,6 @@ public class RadioPlayerService extends Service {
     private WifiManager.WifiLock mWifiLock;
     private BroadcastToEventAdapter mReceiver;
     private AudioFocusCallbackToEventAdapter mAudioFocusCallback;
-    private EventLogger mLogger;
 
     private RadioNotificationManager mRadioNotificationManager;
     private RadioPlayerManager mRadioPlayerManager;
@@ -76,10 +74,9 @@ public class RadioPlayerService extends Service {
 
             mRadioNotificationManager = new RadioNotificationManager(this, mMediaSession);
             mRadioPlayerManager = new RadioPlayerManager(this);
-            mLogger = new EventLogger();
+
 
             RadioApplication.sBus.register(this);
-            RadioApplication.sBus.register(mLogger);
 
             handleIntent(intent);
         }
@@ -106,7 +103,6 @@ public class RadioPlayerService extends Service {
     public void onDestroy() {
         super.onDestroy();
         RadioApplication.sBus.unregister(this);
-        RadioApplication.sBus.unregister(mLogger);
         unregisterReceiver(mReceiver);
         mAudioManager.abandonAudioFocus(mAudioFocusCallback);
 
