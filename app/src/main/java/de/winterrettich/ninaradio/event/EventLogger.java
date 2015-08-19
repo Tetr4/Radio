@@ -37,4 +37,9 @@ public class EventLogger {
         Log.i(TAG, AudioFocusEvent.class.getSimpleName() + ": " + event.name());
     }
 
+    @Subscribe
+    public void handleBufferEvent(BufferEvent event) {
+        Log.i(TAG, BufferEvent.class.getSimpleName() + ": " + event.name());
+    }
+
 }

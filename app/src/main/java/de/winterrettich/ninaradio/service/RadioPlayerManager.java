@@ -8,6 +8,8 @@ import android.util.Log;
 
 import java.io.IOException;
 
+import de.winterrettich.ninaradio.RadioApplication;
+import de.winterrettich.ninaradio.event.BufferEvent;
 import de.winterrettich.ninaradio.model.Station;
 
 /**
@@ -38,6 +40,7 @@ public class RadioPlayerManager implements MediaPlayer.OnPreparedListener {
     @Override
     public void onPrepared(MediaPlayer mp) {
         Log.d(TAG, "State: prepared");
+        RadioApplication.sBus.post(BufferEvent.DONE);
         isPreparing = false;
         if (!cancelStart && !mp.isPlaying()) {
             mp.start();
@@ -65,10 +68,13 @@ public class RadioPlayerManager implements MediaPlayer.OnPreparedListener {
         } else {
             Log.d(TAG, "preparing async");
             isPreparing = true;
+            // TODO try ExoPlayer, because MediaPlayer doesn't provide buffer info for webradio streams
+            RadioApplication.sBus.post(BufferEvent.BUFFERING);
             try {
                 mPlayer.prepareAsync();
             } catch (IllegalStateException e) {
                 // FIXME prepareAsync called in state 8
+                RadioApplication.sBus.post(BufferEvent.BUFFERING);
                 Log.e(TAG, "Could not prepare", e);
                 e.printStackTrace();
             }

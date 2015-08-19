@@ -3,8 +3,6 @@ package de.winterrettich.ninaradio.ui;
 import android.app.Fragment;
 import android.content.Context;
 import android.graphics.drawable.AnimationDrawable;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.StateListDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,7 +11,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.Space;
 import android.widget.TextView;
 
 import com.squareup.otto.Subscribe;
@@ -23,6 +20,7 @@ import java.util.List;
 
 import de.winterrettich.ninaradio.R;
 import de.winterrettich.ninaradio.RadioApplication;
+import de.winterrettich.ninaradio.event.BufferEvent;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
 import de.winterrettich.ninaradio.event.SelectStationEvent;
 import de.winterrettich.ninaradio.model.Station;
@@ -49,12 +47,6 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
 
         mListView = (ListView) rootView.findViewById(R.id.list_view);
 
-        // footer to prevent last item being covered by playback controls
-        Space footer = new Space(getActivity());
-        float footerHeight = getResources().getDimension(R.dimen.station_list_footer_height);
-        footer.setLayoutParams(new ListView.LayoutParams(ListView.LayoutParams.MATCH_PARENT, (int) footerHeight));
-        mListView.addFooterView(footer);
-
         mAdapter = new StationsListAdapter(getActivity(), mStations);
         mListView.setAdapter(mAdapter);
         mListView.setOnItemClickListener(this);
@@ -78,15 +70,8 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
     }
 
     private void refreshUi() {
-        PlaybackEvent currentPlaybackState = RadioApplication.sPlaybackState;
-        if (currentPlaybackState != null) {
-            handlePlaybackEvent(RadioApplication.sPlaybackState);
-        }
-
-        Station currentStation = RadioApplication.sStation;
-        if (currentStation != null) {
-            handleSelectStationEvent(new SelectStationEvent(RadioApplication.sStation));
-        }
+        handlePlaybackEvent(RadioApplication.sPlaybackState);
+        handleSelectStationEvent(new SelectStationEvent(RadioApplication.sStation));
     }
 
     @Subscribe
@@ -94,6 +79,11 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
         if (event == PlaybackEvent.STOP) {
             mListView.clearChoices();
         }
+        mAdapter.notifyDataSetChanged();
+    }
+
+    @Subscribe
+    public void handleBufferEvent(BufferEvent event) {
         mAdapter.notifyDataSetChanged();
     }
 
@@ -130,13 +120,32 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
                 convertView = LayoutInflater.from(getContext()).inflate(R.layout.station_list_item, parent, false);
             }
 
-            // start icon animation if checked and playing
+            // set activated if checked in list
             int checkedPosition = ((ListView) parent).getCheckedItemPosition();
             convertView.setActivated(position == checkedPosition);
-            if (convertView.isActivated() && RadioApplication.sPlaybackState == PlaybackEvent.PLAY) {
-                startIconAnimation(convertView);
+
+            // hide all icons and stop animation
+            View icon = convertView.findViewById(R.id.icon);
+            ImageView icon_playing = (ImageView) convertView.findViewById(R.id.icon_playing);
+            View icon_buffering = convertView.findViewById(R.id.icon_buffering);
+            icon.setVisibility(View.INVISIBLE);
+            icon_playing.setVisibility(View.INVISIBLE);
+            icon_buffering.setVisibility(View.INVISIBLE);
+            AnimationDrawable animation = (AnimationDrawable) icon_playing.getDrawable();
+            animation.stop();
+
+            // show either playback animation, buffering icon or stop icon
+            if (convertView.isActivated()) {
+                if (RadioApplication.sBufferingState == BufferEvent.BUFFERING) {
+                    icon_buffering.setVisibility(View.VISIBLE);
+                } else if (RadioApplication.sPlaybackState == PlaybackEvent.PLAY) {
+                    icon_playing.setVisibility(View.VISIBLE);
+                    animation.start();
+                } else {
+                    icon_playing.setVisibility(View.VISIBLE);
+                }
             } else {
-                stopIconAnimation(convertView);
+                icon.setVisibility(View.VISIBLE);
             }
 
             TextView nameTextView = (TextView) convertView.findViewById(R.id.name);
@@ -145,32 +154,6 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
             descriptionTextView.setText(station.url);
 
             return convertView;
-        }
-
-        private AnimationDrawable findIconAnimationDrawable(View view) {
-            ImageView icon = (ImageView) view.findViewById(R.id.icon);
-            StateListDrawable stateListDrawable = (StateListDrawable) icon.getDrawable();
-            Drawable current = stateListDrawable.getCurrent();
-
-            if (current instanceof AnimationDrawable) {
-                return (AnimationDrawable) current;
-            }
-            return null;
-        }
-
-        private void startIconAnimation(View view) {
-            AnimationDrawable animation = findIconAnimationDrawable(view);
-            if (animation != null && !animation.isRunning()) {
-                animation.setVisible(true, true);
-                animation.start();
-            }
-        }
-
-        private void stopIconAnimation(View view) {
-            AnimationDrawable animation = findIconAnimationDrawable(view);
-            if (animation != null && animation.isRunning()) {
-                animation.stop();
-            }
         }
 
     }
