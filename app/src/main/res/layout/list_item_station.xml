@@ -18,27 +18,28 @@
             android:id="@+id/icon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:tint="@color/accent"
             android:contentDescription="@string/play_station"
-            android:src="@drawable/ic_radio" />
-
-        <ImageView
-            android:id="@+id/icon_playing"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:tint="@color/accent"
-            android:contentDescription="@string/play_station"
-            android:src="@drawable/ic_equalizer"
-            android:visibility="invisible" />
+            android:src="@drawable/ic_radio"
+            android:tint="@color/accent" />
 
         <ProgressBar
             android:id="@+id/icon_buffering"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:contentDescription="@string/play_station"
             android:indeterminateOnly="true"
             android:tint="@color/accent"
-            android:contentDescription="@string/play_station"
             android:visibility="invisible" />
+
+        <ImageView
+            android:id="@+id/icon_playing"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/play_station"
+            android:src="@drawable/ic_equalizer"
+            android:tint="@color/accent"
+            android:visibility="invisible" />
+
     </FrameLayout>
 
 
@@ -46,29 +47,29 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_marginLeft="@dimen/station_item_text_margin_left"
         android:layout_centerVertical="true"
+        android:layout_marginLeft="@dimen/station_item_text_margin_left"
         android:orientation="vertical">
 
         <TextView
             android:id="@+id/name"
-            tools:text="Rock Station"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:maxLines="1"
             android:ellipsize="end"
+            android:maxLines="1"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textColor="?android:attr/textColorPrimary"/>
+            android:textColor="?android:attr/textColorPrimary"
+            tools:text="Rock Station" />
 
         <TextView
             android:id="@+id/description"
-            tools:text="http://197.189.206.172:8000/stream"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:maxLines="1"
             android:ellipsize="end"
+            android:maxLines="1"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textColor="?android:attr/textColorSecondary"/>
+            android:textColor="?android:attr/textColorSecondary"
+            tools:text="http://197.189.206.172:8000/stream" />
 
     </LinearLayout>
 

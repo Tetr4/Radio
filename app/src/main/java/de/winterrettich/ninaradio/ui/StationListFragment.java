@@ -19,10 +19,12 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.bignerdranch.android.multiselector.ModalMultiSelectorCallback;
+import com.bignerdranch.android.multiselector.MultiSelector;
 import com.bignerdranch.android.multiselector.SingleSelector;
 import com.bignerdranch.android.multiselector.SwappingHolder;
 import com.squareup.otto.Subscribe;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import de.winterrettich.ninaradio.R;
@@ -38,40 +40,9 @@ public class StationListFragment extends Fragment {
     private List<Station> mDatabaseStations;
     private RecyclerView mRecyclerView;
     private SingleSelector mSelector = new SingleSelector();
-    private ActionMode.Callback mDeleteMode = new ModalMultiSelectorCallback(mSelector) {
-
-        @Override
-        public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
-            RadioApplication.sBus.post(PlaybackEvent.STOP);
-            getActivity().getMenuInflater().inflate(R.menu.menu_selection, menu);
-            return true;
-        }
-
-        @Override
-        public void onDestroyActionMode(ActionMode actionMode) {
-            mSelector.clearSelections();
-        }
-
-        @Override
-        public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
-            switch (menuItem.getItemId()) {
-                case R.id.action_delete:
-                    int positionToDelete = mSelector.getSelectedPositions().get(0);
-                    Station stationToDelete = mDatabaseStations.get(positionToDelete);
-                    DatabaseEvent deleteEvent =
-                            new DatabaseEvent(DatabaseEvent.Operation.DELETE_STATION, stationToDelete);
-                    RadioApplication.sBus.post(deleteEvent);
-                    actionMode.finish();
-                    return true;
-
-                case R.id.action_edit:
-                    // TODO
-                    break;
-            }
-            return false;
-        }
-    };
+    private ActionMode.Callback mActionModeCallback = new ActionModeCallback(mSelector);
     private ActionMode mActionMode;
+    private boolean mIsInActionMode = false;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -84,37 +55,10 @@ public class StationListFragment extends Fragment {
         mAdapter = new StationAdapter();
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        mRecyclerView.setAdapter(new StationAdapter());
+        mRecyclerView.setAdapter(mAdapter);
         //mRecyclerView.setHasFixedSize(true);
 
         return rootView;
-    }
-
-    private void synchronizeStationsWithDatabase() {
-        mDatabaseStations = RadioApplication.sDatabase.getStations();
-    }
-
-    @Subscribe
-    public void handleDatabaseEvent(DatabaseEvent event) {
-        switch (event.operation) {
-            case CREATE_STATION:
-                synchronizeStationsWithDatabase();
-                int lastPosition = mDatabaseStations.size();
-                mRecyclerView.getAdapter().notifyItemInserted(lastPosition);
-                //mAdapter.notifyDataSetChanged();
-                break;
-            case DELETE_STATION:
-                int positionToDelete = mDatabaseStations.indexOf(event.station);
-                mRecyclerView.getAdapter().notifyItemRemoved(positionToDelete);
-                mSelector.clearSelections();
-                synchronizeStationsWithDatabase();
-                break;
-            case UPDATE_STATION:
-                // FIXME
-                synchronizeStationsWithDatabase();
-                break;
-        }
-
     }
 
     @Override
@@ -134,32 +78,70 @@ public class StationListFragment extends Fragment {
 
     private void refreshUi() {
         synchronizeStationsWithDatabase();
+        mAdapter.notifyDataSetChanged();
         handlePlaybackEvent(RadioApplication.sDatabase.playbackState);
         handleSelectStationEvent(new SelectStationEvent(RadioApplication.sDatabase.selectedStation));
     }
 
+    private void synchronizeStationsWithDatabase() {
+        // shallow copy
+        mDatabaseStations = new ArrayList<>(RadioApplication.sDatabase.getStations());
+    }
+
+    @Subscribe
+    public void handleDatabaseEvent(DatabaseEvent event) {
+        switch (event.operation) {
+
+            case CREATE_STATION:
+                synchronizeStationsWithDatabase();
+                int lastPosition = mDatabaseStations.size();
+                mAdapter.notifyItemInserted(lastPosition);
+                break;
+
+            case DELETE_STATION:
+                int positionToDelete = mDatabaseStations.indexOf(event.station);
+                if (positionToDelete > -1) {
+                    mAdapter.notifyItemRemoved(positionToDelete);
+                }
+                synchronizeStationsWithDatabase();
+                break;
+
+            case UPDATE_STATION:
+                // FIXME
+                int positionToUpdate = mDatabaseStations.indexOf(event.station);
+                if (positionToUpdate > -1) {
+                    mAdapter.notifyItemChanged(positionToUpdate);
+                }
+                synchronizeStationsWithDatabase();
+                break;
+        }
+
+    }
+
     @Subscribe
     public void handlePlaybackEvent(PlaybackEvent event) {
-        if (event == PlaybackEvent.STOP) {
+        if (!mIsInActionMode && event == PlaybackEvent.STOP) {
             mSelector.clearSelections();
+        } else {
+            int selectedPosition = mSelector.getSelectedPositions().get(0);
+            mAdapter.notifyItemChanged(selectedPosition);
         }
-        // FIXME
-        mAdapter.notifyDataSetChanged();
     }
 
     @Subscribe
     public void handleBufferEvent(BufferEvent event) {
-        // FIXME
-        mAdapter.notifyDataSetChanged();
+        int selectedPosition = mSelector.getSelectedPositions().get(0);
+        mAdapter.notifyItemChanged(selectedPosition);
     }
 
     @Subscribe
     public void handleSelectStationEvent(SelectStationEvent event) {
         int position = mDatabaseStations.indexOf(event.station);
         if (position >= 0) {
+            mSelector.setSelected(position, 0, true);
             // FIXME
 //            mListView.smoothScrollToPosition(position);
-        } else {
+        } else if (!mIsInActionMode) {
             mSelector.clearSelections();
         }
         mAdapter.notifyDataSetChanged();
@@ -185,13 +167,50 @@ public class StationListFragment extends Fragment {
 //            setDefaultModeStateListAnimator();
             itemView.setOnClickListener(this);
             itemView.setOnLongClickListener(this);
-            //itemView.setLongClickable(true);
+
             mIcon = (ImageView) itemView.findViewById(R.id.icon);
             mIconBuffering = (ProgressBar) itemView.findViewById(R.id.icon_buffering);
             mIconPlaying = (ImageView) itemView.findViewById(R.id.icon_playing);
             mIconPlayingAnimation = (AnimationDrawable) mIconPlaying.getDrawable();
             mNameTextView = (TextView) itemView.findViewById(R.id.name);
             mUrlTextView = (TextView) itemView.findViewById(R.id.description);
+        }
+
+        public void bindStation(Station station) {
+            mStation = station;
+
+            mNameTextView.setText(mStation.name);
+            mUrlTextView.setText(mStation.url);
+
+            // show either playback animation, buffering icon or stop icon
+            boolean isSelected = mSelector.isSelected(getAdapterPosition(), 0) && !mIsInActionMode;
+            boolean isBuffering = RadioApplication.sDatabase.bufferingState == BufferEvent.BUFFERING;
+            boolean isPlaying = RadioApplication.sDatabase.playbackState == PlaybackEvent.PLAY;
+
+            if (isSelected) {
+                if (isBuffering) {
+                    // buffer icon
+                    mIcon.setVisibility(View.INVISIBLE);
+                    mIconBuffering.setVisibility(View.VISIBLE);
+                    mIconPlaying.setVisibility(View.INVISIBLE);
+                } else if (isPlaying) {
+                    // animated icon
+                    mIcon.setVisibility(View.INVISIBLE);
+                    mIconBuffering.setVisibility(View.INVISIBLE);
+                    mIconPlaying.setVisibility(View.VISIBLE);
+                    mIconPlayingAnimation.start();
+                } else {
+                    // paused icon
+                    mIcon.setVisibility(View.INVISIBLE);
+                    mIconBuffering.setVisibility(View.INVISIBLE);
+                    mIconPlaying.setVisibility(View.VISIBLE);
+                }
+            } else {
+                // default/stopped icon
+                mIcon.setVisibility(View.VISIBLE);
+                mIconBuffering.setVisibility(View.INVISIBLE);
+                mIconPlaying.setVisibility(View.INVISIBLE);
+            }
         }
 
         @Override
@@ -202,53 +221,21 @@ public class StationListFragment extends Fragment {
             }
 
             mSelector.tapSelection(this);
-            mStation.setState(Station.State.PAUSED);
 
             RadioApplication.sBus.post(new SelectStationEvent(mStation));
             RadioApplication.sBus.post(PlaybackEvent.PLAY);
-        }
-
-        public void bindStation(Station station) {
-            mStation = station;
-            updateLayout();
-        }
-
-        private void updateLayout() {
-            mNameTextView.setText(mStation.name);
-            mUrlTextView.setText(mStation.url);
-
-            // show either playback animation, buffering icon or stop icon
-            mIcon.setVisibility(View.INVISIBLE);
-            mIconBuffering.setVisibility(View.INVISIBLE);
-            mIconPlaying.setVisibility(View.INVISIBLE);
-            mIconPlayingAnimation.stop();  // TODO maybe not needed
-
-            switch (mStation.getState()) {
-                case STOPPED:
-                    mIcon.setVisibility(View.VISIBLE);
-                    break;
-                case BUFFERING:
-                    mIconBuffering.setVisibility(View.VISIBLE);
-                    break;
-                case PAUSED:
-                    mIconPlaying.setVisibility(View.VISIBLE);
-                    break;
-                case PLAYING:
-                    mIconPlaying.setVisibility(View.VISIBLE);
-                    mIconPlayingAnimation.start();
-                    break;
-            }
         }
 
         @Override
         public boolean onLongClick(View v) {
             // start action mode to delete/edit item
             AppCompatActivity activity = (AppCompatActivity) getActivity();
-            mActionMode = activity.startSupportActionMode(mDeleteMode);
+            mActionMode = activity.startSupportActionMode(mActionModeCallback);
             mSelector.setSelected(this, true);
             return true;
         }
     }
+
 
     private class StationAdapter extends RecyclerView.Adapter<StationHolder> {
         @Override
@@ -269,4 +256,51 @@ public class StationListFragment extends Fragment {
             return mDatabaseStations.size();
         }
     }
+
+
+    /**
+     * ActionMode, which displays a menu to delete/edit stations
+     */
+    private class ActionModeCallback extends ModalMultiSelectorCallback {
+        public ActionModeCallback(MultiSelector multiSelector) {
+            super(multiSelector);
+
+        }
+
+        @Override
+        public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
+            // stop playback and show menu
+            mIsInActionMode = true;
+            RadioApplication.sBus.post(PlaybackEvent.STOP);
+            getActivity().getMenuInflater().inflate(R.menu.menu_selection, menu);
+            return true;
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode actionMode) {
+            getMultiSelector().clearSelections();
+            mIsInActionMode = false;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
+            switch (menuItem.getItemId()) {
+                case R.id.action_delete:
+                    int positionToDelete = getMultiSelector().getSelectedPositions().get(0);
+                    Station stationToDelete = mDatabaseStations.get(positionToDelete);
+                    DatabaseEvent deleteEvent =
+                            new DatabaseEvent(DatabaseEvent.Operation.DELETE_STATION, stationToDelete);
+                    RadioApplication.sBus.post(deleteEvent);
+                    actionMode.finish();
+                    return true;
+
+                case R.id.action_edit:
+                    // TODO
+                    break;
+            }
+            return false;
+        }
+    }
+
+    ;
 }

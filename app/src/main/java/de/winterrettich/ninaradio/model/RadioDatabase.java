@@ -17,9 +17,9 @@ import de.winterrettich.ninaradio.event.PlaybackEvent;
 import de.winterrettich.ninaradio.event.SelectStationEvent;
 
 public class RadioDatabase {
-    public List<Station> mStations;
+    private List<Station> mStations;
     public PlaybackEvent playbackState = PlaybackEvent.STOP;
-    public BufferEvent bufferingState = BufferEvent.DONE;
+    public BufferEvent bufferingState = BufferEvent.BUFFERING;
     public Station selectedStation = null;
 
     public RadioDatabase() {
@@ -83,11 +83,8 @@ public class RadioDatabase {
 
     }
 
-    public int getStationsCount() {
-        return mStations.size();
-    }
-
     public List<Station> getStations() {
+        // error when trying to modify
         return Collections.unmodifiableList(mStations);
     }
 

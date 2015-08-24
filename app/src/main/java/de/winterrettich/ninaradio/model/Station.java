@@ -17,12 +17,6 @@ public class Station extends Model implements Parcelable, Comparable<Station> {
     @Column(name = "url")
     public String url;
 
-    public enum State {
-        STOPPED, PAUSED, BUFFERING, PLAYING
-    }
-    private State mState = State.STOPPED;
-
-
     public Station() {
         super();
     }
@@ -37,14 +31,6 @@ public class Station extends Model implements Parcelable, Comparable<Station> {
         super();
         this.name = name;
         this.url = url;
-    }
-
-    public State getState() {
-        return mState;
-    }
-
-    public void setState(State state) {
-        mState = state;
     }
 
     @Override
@@ -70,6 +56,20 @@ public class Station extends Model implements Parcelable, Comparable<Station> {
             return new Station[size];
         }
     };
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == null) return false;
+        if (other == this) return true;
+        if (!(other instanceof Station)) return false;
+        Station otherStation = (Station) other;
+        return getId().equals(otherStation.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getId().hashCode();
+    }
 
     @Override
     public int compareTo(@NonNull Station another) {
