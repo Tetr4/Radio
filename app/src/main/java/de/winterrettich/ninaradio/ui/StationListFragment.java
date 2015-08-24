@@ -120,9 +120,13 @@ public class StationListFragment extends Fragment {
 
     @Subscribe
     public void handlePlaybackEvent(PlaybackEvent event) {
-        if (!mIsInActionMode && event == PlaybackEvent.STOP) {
+        if (mIsInActionMode) {
+            return;
+        }
+
+        if (event == PlaybackEvent.STOP) {
             mSelector.clearSelections();
-        } else {
+        } else if (!mSelector.getSelectedPositions().isEmpty()) {
             int selectedPosition = mSelector.getSelectedPositions().get(0);
             mAdapter.notifyItemChanged(selectedPosition);
         }
@@ -130,8 +134,10 @@ public class StationListFragment extends Fragment {
 
     @Subscribe
     public void handleBufferEvent(BufferEvent event) {
-        int selectedPosition = mSelector.getSelectedPositions().get(0);
-        mAdapter.notifyItemChanged(selectedPosition);
+        if (!mIsInActionMode && !mSelector.getSelectedPositions().isEmpty()) {
+            int selectedPosition = mSelector.getSelectedPositions().get(0);
+            mAdapter.notifyItemChanged(selectedPosition);
+        }
     }
 
     @Subscribe
@@ -188,22 +194,23 @@ public class StationListFragment extends Fragment {
             boolean isPlaying = RadioApplication.sDatabase.playbackState == PlaybackEvent.PLAY;
 
             if (isSelected) {
-                if (isBuffering) {
+                if (!isPlaying) {
+                    // paused icon
+                    mIcon.setVisibility(View.INVISIBLE);
+                    mIconBuffering.setVisibility(View.INVISIBLE);
+                    mIconPlaying.setVisibility(View.VISIBLE);
+                    mIconPlayingAnimation.stop();
+                } else if (isBuffering) {
                     // buffer icon
                     mIcon.setVisibility(View.INVISIBLE);
                     mIconBuffering.setVisibility(View.VISIBLE);
                     mIconPlaying.setVisibility(View.INVISIBLE);
-                } else if (isPlaying) {
+                } else {
                     // animated icon
                     mIcon.setVisibility(View.INVISIBLE);
                     mIconBuffering.setVisibility(View.INVISIBLE);
                     mIconPlaying.setVisibility(View.VISIBLE);
                     mIconPlayingAnimation.start();
-                } else {
-                    // paused icon
-                    mIcon.setVisibility(View.INVISIBLE);
-                    mIconBuffering.setVisibility(View.INVISIBLE);
-                    mIconPlaying.setVisibility(View.VISIBLE);
                 }
             } else {
                 // default/stopped icon
@@ -264,7 +271,6 @@ public class StationListFragment extends Fragment {
     private class ActionModeCallback extends ModalMultiSelectorCallback {
         public ActionModeCallback(MultiSelector multiSelector) {
             super(multiSelector);
-
         }
 
         @Override
@@ -302,5 +308,4 @@ public class StationListFragment extends Fragment {
         }
     }
 
-    ;
 }
