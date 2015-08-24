@@ -1,97 +1,120 @@
 package de.winterrettich.ninaradio.ui;
 
 import android.app.Fragment;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.drawable.AnimationDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.view.ActionMode;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.bignerdranch.android.multiselector.ModalMultiSelectorCallback;
+import com.bignerdranch.android.multiselector.SingleSelector;
+import com.bignerdranch.android.multiselector.SwappingHolder;
 import com.squareup.otto.Subscribe;
 
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import de.winterrettich.ninaradio.R;
 import de.winterrettich.ninaradio.RadioApplication;
-import de.winterrettich.ninaradio.event.AddStationEvent;
 import de.winterrettich.ninaradio.event.BufferEvent;
+import de.winterrettich.ninaradio.event.DatabaseEvent;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
 import de.winterrettich.ninaradio.event.SelectStationEvent;
 import de.winterrettich.ninaradio.model.Station;
 
-public class StationListFragment extends Fragment implements AdapterView.OnItemClickListener {
-    public static final String STATIONS_PREFERENCE = "STATIONS_PREFERENCE";
-    private ListView mListView;
-    private StationsListAdapter mAdapter;
-    private LinkedList<Station> mStations = new LinkedList<>();
-    private SharedPreferences mSharedPreferences;
+public class StationListFragment extends Fragment {
+    private StationAdapter mAdapter;
+    private List<Station> mDatabaseStations;
+    private RecyclerView mRecyclerView;
+    private SingleSelector mSelector = new SingleSelector();
+    private ActionMode.Callback mDeleteMode = new ModalMultiSelectorCallback(mSelector) {
+
+        @Override
+        public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
+            RadioApplication.sBus.post(PlaybackEvent.STOP);
+            getActivity().getMenuInflater().inflate(R.menu.menu_selection, menu);
+            return true;
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode actionMode) {
+            mSelector.clearSelections();
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
+            switch (menuItem.getItemId()) {
+                case R.id.action_delete:
+                    int positionToDelete = mSelector.getSelectedPositions().get(0);
+                    Station stationToDelete = mDatabaseStations.get(positionToDelete);
+                    DatabaseEvent deleteEvent =
+                            new DatabaseEvent(DatabaseEvent.Operation.DELETE_STATION, stationToDelete);
+                    RadioApplication.sBus.post(deleteEvent);
+                    actionMode.finish();
+                    return true;
+
+                case R.id.action_edit:
+                    // TODO
+                    break;
+            }
+            return false;
+        }
+    };
+    private ActionMode mActionMode;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_station_list, container, false);
 
-        mSharedPreferences = getActivity().getSharedPreferences(STATIONS_PREFERENCE, Context.MODE_PRIVATE);
-        if (mSharedPreferences.getAll().isEmpty()) {
-            loadDefaultStations();
-        } else {
-            loadSavedStations();
-        }
+        // fill mDatabaseStations
+        synchronizeStationsWithDatabase();
 
-
-        mListView = (ListView) rootView.findViewById(R.id.list_view);
-
-        mAdapter = new StationsListAdapter(getActivity(), mStations);
-        mListView.setAdapter(mAdapter);
-        mListView.setOnItemClickListener(this);
+        mSelector.setSelectable(true);
+        mAdapter = new StationAdapter();
+        mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recycler_view);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        mRecyclerView.setAdapter(new StationAdapter());
+        //mRecyclerView.setHasFixedSize(true);
 
         return rootView;
     }
 
-    private void loadDefaultStations() {
-        mStations.add(new Station("Rock", "http://197.189.206.172:8000/stream"));
-        mStations.add(new Station("Spanisch", "http://usa8-vn.mixstream.net:8138"));
-        mStations.add(new Station("FFN", "http://player.ffn.de/ffnstream.mp3"));
-        mStations.add(new Station("Antenne Niedersachsen", "http://stream.antenne.com/antenne-nds/mp3-128/radioplayer/"));
-        mStations.add(new Station("1Live", "http://gffstream.ic.llnwd.net/stream/gffstream_stream_wdr_einslive_a"));
-        mStations.add(new Station("Radio Gütersloh", "http://edge.live.mp3.mdn.newmedia.nacamar.net/radioguetersloh/livestream.mp3"));
-        mStations.add(new Station("Rock2", "http://197.189.206.172:8000/stream"));
-        mStations.add(new Station("Rock3", "http://197.189.206.172:8000/stream"));
-        mStations.add(new Station("Rock4", "http://197.189.206.172:8000/stream"));
-        mStations.add(new Station("Rock5", "http://197.189.206.172:8000/stream"));
-        Collections.sort(mStations);
-    }
-
-    private void loadSavedStations() {
-        for (Map.Entry<String, ?> entry : mSharedPreferences.getAll().entrySet()) {
-            String name = entry.getKey();
-            String url = (String) entry.getValue();
-            mStations.add(new Station(name, url));
-        }
-        Collections.sort(mStations);
-    }
-
-    private void saveStations() {
-        SharedPreferences.Editor editor = mSharedPreferences.edit();
-        for (Station station : mStations) {
-            editor.putString(station.name, station.url);
-        }
-        editor.commit();
+    private void synchronizeStationsWithDatabase() {
+        mDatabaseStations = RadioApplication.sDatabase.getStations();
     }
 
     @Subscribe
-    public void handleAddStationEvent(AddStationEvent event) {
-        mStations.add(event.station);
-        Collections.sort(mStations);
+    public void handleDatabaseEvent(DatabaseEvent event) {
+        switch (event.operation) {
+            case CREATE_STATION:
+                synchronizeStationsWithDatabase();
+                int lastPosition = mDatabaseStations.size();
+                mRecyclerView.getAdapter().notifyItemInserted(lastPosition);
+                //mAdapter.notifyDataSetChanged();
+                break;
+            case DELETE_STATION:
+                int positionToDelete = mDatabaseStations.indexOf(event.station);
+                mRecyclerView.getAdapter().notifyItemRemoved(positionToDelete);
+                mSelector.clearSelections();
+                synchronizeStationsWithDatabase();
+                break;
+            case UPDATE_STATION:
+                // FIXME
+                synchronizeStationsWithDatabase();
+                break;
+        }
+
     }
 
     @Override
@@ -107,95 +130,143 @@ public class StationListFragment extends Fragment implements AdapterView.OnItemC
     public void onPause() {
         super.onPause();
         RadioApplication.sBus.unregister(this);
-        saveStations();
     }
 
     private void refreshUi() {
-        handlePlaybackEvent(RadioApplication.sPlaybackState);
-        handleSelectStationEvent(new SelectStationEvent(RadioApplication.sStation));
+        synchronizeStationsWithDatabase();
+        handlePlaybackEvent(RadioApplication.sDatabase.playbackState);
+        handleSelectStationEvent(new SelectStationEvent(RadioApplication.sDatabase.selectedStation));
     }
 
     @Subscribe
     public void handlePlaybackEvent(PlaybackEvent event) {
         if (event == PlaybackEvent.STOP) {
-            mListView.clearChoices();
+            mSelector.clearSelections();
         }
+        // FIXME
         mAdapter.notifyDataSetChanged();
     }
 
     @Subscribe
     public void handleBufferEvent(BufferEvent event) {
+        // FIXME
         mAdapter.notifyDataSetChanged();
     }
 
     @Subscribe
     public void handleSelectStationEvent(SelectStationEvent event) {
-        if (mStations.contains(event.station)) {
-            int position = mAdapter.getPosition(event.station);
-            mListView.smoothScrollToPosition(position);
-            mListView.setItemChecked(position, true);
+        int position = mDatabaseStations.indexOf(event.station);
+        if (position >= 0) {
+            // FIXME
+//            mListView.smoothScrollToPosition(position);
         } else {
-            mListView.clearChoices();
+            mSelector.clearSelections();
         }
         mAdapter.notifyDataSetChanged();
     }
 
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Station station = (Station) parent.getItemAtPosition(position);
-        RadioApplication.sBus.post(new SelectStationEvent(station));
-        RadioApplication.sBus.post(PlaybackEvent.PLAY);
-    }
 
-    private class StationsListAdapter extends ArrayAdapter<Station> {
+    private class StationHolder extends SwappingHolder implements View.OnClickListener, View.OnLongClickListener {
+        private final ImageView mIcon;
+        private final ProgressBar mIconBuffering;
+        private final ImageView mIconPlaying;
+        private final AnimationDrawable mIconPlayingAnimation;
+        private final TextView mNameTextView;
+        private final TextView mUrlTextView;
 
-        public StationsListAdapter(Context context, List<Station> objects) {
-            super(context, 0, objects);
+        private Station mStation;
+
+        public StationHolder(View itemView) {
+            super(itemView, mSelector);
+            Drawable selector = ContextCompat.getDrawable(getActivity(), R.drawable.station_list_selector);
+            setSelectionModeBackgroundDrawable(selector);
+            setDefaultModeBackgroundDrawable(selector);
+//            setSelectionModeStateListAnimator();
+//            setDefaultModeStateListAnimator();
+            itemView.setOnClickListener(this);
+            itemView.setOnLongClickListener(this);
+            //itemView.setLongClickable(true);
+            mIcon = (ImageView) itemView.findViewById(R.id.icon);
+            mIconBuffering = (ProgressBar) itemView.findViewById(R.id.icon_buffering);
+            mIconPlaying = (ImageView) itemView.findViewById(R.id.icon_playing);
+            mIconPlayingAnimation = (AnimationDrawable) mIconPlaying.getDrawable();
+            mNameTextView = (TextView) itemView.findViewById(R.id.name);
+            mUrlTextView = (TextView) itemView.findViewById(R.id.description);
         }
 
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            Station station = getItem(position);
-
-            if (convertView == null) {
-                convertView = LayoutInflater.from(getContext()).inflate(R.layout.station_list_item, parent, false);
+        public void onClick(View v) {
+            // close action mode on normal click
+            if (mActionMode != null) {
+                mActionMode.finish();
             }
 
-            // set activated if checked in list
-            int checkedPosition = ((ListView) parent).getCheckedItemPosition();
-            convertView.setActivated(position == checkedPosition);
+            mSelector.tapSelection(this);
+            mStation.setState(Station.State.PAUSED);
 
-            // hide all icons and stop animation
-            View icon = convertView.findViewById(R.id.icon);
-            ImageView icon_playing = (ImageView) convertView.findViewById(R.id.icon_playing);
-            View icon_buffering = convertView.findViewById(R.id.icon_buffering);
-            icon.setVisibility(View.INVISIBLE);
-            icon_playing.setVisibility(View.INVISIBLE);
-            icon_buffering.setVisibility(View.INVISIBLE);
-            AnimationDrawable animation = (AnimationDrawable) icon_playing.getDrawable();
-            animation.stop();
-
-            // show either playback animation, buffering icon or stop icon
-            if (convertView.isActivated()) {
-                if (RadioApplication.sBufferingState == BufferEvent.BUFFERING) {
-                    icon_buffering.setVisibility(View.VISIBLE);
-                } else if (RadioApplication.sPlaybackState == PlaybackEvent.PLAY) {
-                    icon_playing.setVisibility(View.VISIBLE);
-                    animation.start();
-                } else {
-                    icon_playing.setVisibility(View.VISIBLE);
-                }
-            } else {
-                icon.setVisibility(View.VISIBLE);
-            }
-
-            TextView nameTextView = (TextView) convertView.findViewById(R.id.name);
-            TextView descriptionTextView = (TextView) convertView.findViewById(R.id.description);
-            nameTextView.setText(station.name);
-            descriptionTextView.setText(station.url);
-
-            return convertView;
+            RadioApplication.sBus.post(new SelectStationEvent(mStation));
+            RadioApplication.sBus.post(PlaybackEvent.PLAY);
         }
 
+        public void bindStation(Station station) {
+            mStation = station;
+            updateLayout();
+        }
+
+        private void updateLayout() {
+            mNameTextView.setText(mStation.name);
+            mUrlTextView.setText(mStation.url);
+
+            // show either playback animation, buffering icon or stop icon
+            mIcon.setVisibility(View.INVISIBLE);
+            mIconBuffering.setVisibility(View.INVISIBLE);
+            mIconPlaying.setVisibility(View.INVISIBLE);
+            mIconPlayingAnimation.stop();  // TODO maybe not needed
+
+            switch (mStation.getState()) {
+                case STOPPED:
+                    mIcon.setVisibility(View.VISIBLE);
+                    break;
+                case BUFFERING:
+                    mIconBuffering.setVisibility(View.VISIBLE);
+                    break;
+                case PAUSED:
+                    mIconPlaying.setVisibility(View.VISIBLE);
+                    break;
+                case PLAYING:
+                    mIconPlaying.setVisibility(View.VISIBLE);
+                    mIconPlayingAnimation.start();
+                    break;
+            }
+        }
+
+        @Override
+        public boolean onLongClick(View v) {
+            // start action mode to delete/edit item
+            AppCompatActivity activity = (AppCompatActivity) getActivity();
+            mActionMode = activity.startSupportActionMode(mDeleteMode);
+            mSelector.setSelected(this, true);
+            return true;
+        }
+    }
+
+    private class StationAdapter extends RecyclerView.Adapter<StationHolder> {
+        @Override
+        public StationHolder onCreateViewHolder(ViewGroup parent, int pos) {
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.list_item_station, parent, false);
+            return new StationHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(StationHolder holder, int pos) {
+            Station station = mDatabaseStations.get(pos);
+            holder.bindStation(station);
+        }
+
+        @Override
+        public int getItemCount() {
+            return mDatabaseStations.size();
+        }
     }
 }

@@ -10,6 +10,8 @@
     <string name="play">play</string>
 
     <string name="add_station">Add station</string>
+    <string name="delete_station">delete station</string>
+    <string name="edit_station">edit station</string>
 
     <string name="station_name_hint">FFN</string>
     <string name="station_url_hint">http://player.ffn.de/ffnstream.mp3</string>
