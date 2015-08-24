@@ -13,7 +13,7 @@ import android.widget.EditText;
 
 import de.winterrettich.ninaradio.R;
 import de.winterrettich.ninaradio.RadioApplication;
-import de.winterrettich.ninaradio.event.AddStationEvent;
+import de.winterrettich.ninaradio.event.DatabaseEvent;
 import de.winterrettich.ninaradio.model.Station;
 
 public class AddStationDialogFragment extends DialogFragment {
@@ -59,7 +59,9 @@ public class AddStationDialogFragment extends DialogFragment {
 
                         if (!error) {
                             Station station = new Station(name, url);
-                            RadioApplication.sBus.post(new AddStationEvent(station));
+                            DatabaseEvent addEvent = new DatabaseEvent(
+                                    DatabaseEvent.Operation.CREATE_STATION, station);
+                            RadioApplication.sBus.post(addEvent);
                             alertDialog.dismiss();
                         }
                     }

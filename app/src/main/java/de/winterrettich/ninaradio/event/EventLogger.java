@@ -14,7 +14,8 @@ public class EventLogger {
 
     @Subscribe
     public void handleSelectStationEvent(SelectStationEvent event) {
-        Log.i(TAG, SelectStationEvent.class.getSimpleName() + ": " + event.station.name + " -> " + event.station.url);
+        Log.i(TAG, SelectStationEvent.class.getSimpleName() + ": " +
+                event.station.name + " -> " + event.station.url);
     }
 
     @Subscribe
@@ -43,8 +44,9 @@ public class EventLogger {
     }
 
     @Subscribe
-    public void handleAddStationEvent(AddStationEvent event) {
-        Log.i(TAG, AddStationEvent.class.getSimpleName() + ": " + event.station.name + " -> " + event.station.url);
+    public void handleDatabaseEvent(DatabaseEvent event) {
+        Log.i(TAG, DatabaseEvent.class.getSimpleName() + " (" + event.operation.name() + "): " +
+                event.station.name + " -> " + event.station.url);
     }
 
 }

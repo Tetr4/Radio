@@ -16,6 +16,9 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
 
+        <meta-data android:name="AA_DB_NAME" android:value="Radio.db" />
+        <meta-data android:name="AA_MODELS"  android:value="de.winterrettich.ninaradio.model.Station" />
+
         <activity
             android:name=".ui.MainActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"

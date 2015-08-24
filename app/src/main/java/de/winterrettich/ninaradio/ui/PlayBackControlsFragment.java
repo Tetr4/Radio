@@ -58,12 +58,12 @@ public class PlayBackControlsFragment extends Fragment implements View.OnClickLi
     }
 
     private void refreshUi() {
-        handlePlaybackEvent(RadioApplication.sPlaybackState);
+        handlePlaybackEvent(RadioApplication.sDatabase.playbackState);
     }
 
     @Override
     public void onClick(View v) {
-        if (RadioApplication.sPlaybackState == PlaybackEvent.PLAY) {
+        if (RadioApplication.sDatabase.playbackState == PlaybackEvent.PLAY) {
             RadioApplication.sBus.post(PlaybackEvent.PAUSE);
         } else {
             RadioApplication.sBus.post(PlaybackEvent.PLAY);

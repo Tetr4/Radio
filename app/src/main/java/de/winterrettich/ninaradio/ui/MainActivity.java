@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void refreshUi() {
-        handlePlaybackEvent(RadioApplication.sPlaybackState);
+        handlePlaybackEvent(RadioApplication.sDatabase.playbackState);
     }
 
     private void showPlaybackControls() {

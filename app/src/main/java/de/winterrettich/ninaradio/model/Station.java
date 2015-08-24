@@ -4,48 +4,58 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
-public class Station implements Parcelable, Comparable<Station> {
+import com.activeandroid.Model;
+import com.activeandroid.annotation.Column;
+import com.activeandroid.annotation.Table;
+
+@Table(name = "Stations")
+public class Station extends Model implements Parcelable, Comparable<Station> {
+
+    @Column(name = "Name")
     public String name;
+
+    @Column(name = "url")
     public String url;
 
-    public Station(String name, String url) {
-        this.name = name;
-        this.url = url;
+    public enum State {
+        STOPPED, PAUSED, BUFFERING, PLAYING
+    }
+    private State mState = State.STOPPED;
+
+
+    public Station() {
+        super();
     }
 
     public Station(Parcel in) {
+        super();
         this.name = in.readString();
         this.url = in.readString();
     }
 
-    @Override
-    public boolean equals(Object other) {
-        if (other == null) return false;
-        if (other == this) return true;
-        if (!(other instanceof Station)) return false;
-        Station otherStation = (Station) other;
-        return name.equals(otherStation.name) && url.equals(otherStation.url);
+    public Station(String name, String url) {
+        super();
+        this.name = name;
+        this.url = url;
     }
 
-    @Override
-    public int hashCode() {
-        return name.hashCode() * url.hashCode();
+    public State getState() {
+        return mState;
     }
 
-    @Override
-    public String toString() {
-        return name + "(" + url + ")";
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
+    public void setState(State state) {
+        mState = state;
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(name);
         dest.writeString(url);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
     }
 
     @SuppressWarnings("unused")
@@ -66,4 +76,10 @@ public class Station implements Parcelable, Comparable<Station> {
         // compare lexographically
         return name.compareToIgnoreCase(another.name);
     }
+
+    @Override
+    public String toString() {
+        return name + "(" + url + ")";
+    }
+
 }

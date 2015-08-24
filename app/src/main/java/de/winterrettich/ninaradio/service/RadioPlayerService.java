@@ -259,7 +259,8 @@ public class RadioPlayerService extends Service {
 
             case AUDIOFOCUS_LOSS_TRANSIENT:
                 // Lost focus for a short time
-                mResumeAfterGain = RadioApplication.sPlaybackState == PlaybackEvent.PLAY;
+                PlaybackEvent currentPlaybackState = RadioApplication.sDatabase.playbackState;
+                mResumeAfterGain = currentPlaybackState == PlaybackEvent.PLAY;
                 mSkipOverwrite = true;
                 RadioApplication.sBus.post(PlaybackEvent.PAUSE);
                 break;
