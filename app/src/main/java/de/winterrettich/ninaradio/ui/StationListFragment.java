@@ -18,8 +18,6 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.bignerdranch.android.multiselector.ModalMultiSelectorCallback;
-import com.bignerdranch.android.multiselector.MultiSelector;
 import com.bignerdranch.android.multiselector.SingleSelector;
 import com.bignerdranch.android.multiselector.SwappingHolder;
 import com.squareup.otto.Subscribe;
@@ -35,14 +33,13 @@ import de.winterrettich.ninaradio.event.PlaybackEvent;
 import de.winterrettich.ninaradio.event.SelectStationEvent;
 import de.winterrettich.ninaradio.model.Station;
 
-public class StationListFragment extends Fragment {
-    private StationAdapter mAdapter;
+public class StationListFragment extends Fragment implements ActionMode.Callback {
     private List<Station> mDatabaseStations;
+    private StationAdapter mAdapter;
     private RecyclerView mRecyclerView;
     private SingleSelector mSelector = new SingleSelector();
-    private ActionMode.Callback mActionModeCallback = new ActionModeCallback(mSelector);
+
     private ActionMode mActionMode;
-    private boolean mIsInActionMode = false;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -88,6 +85,50 @@ public class StationListFragment extends Fragment {
         mDatabaseStations = new ArrayList<>(RadioApplication.sDatabase.getStations());
     }
 
+    private boolean isInActionMode() {
+        return mActionMode != null;
+    }
+
+    @Override
+    public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
+        // stop playback and show menu
+        mActionMode = actionMode;
+        RadioApplication.sBus.post(PlaybackEvent.STOP);
+        getActivity().getMenuInflater().inflate(R.menu.menu_selection, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+        return false;
+    }
+
+    @Override
+    public void onDestroyActionMode(ActionMode actionMode) {
+        mSelector.clearSelections();
+        mActionMode = null;
+    }
+
+    @Override
+    public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
+        switch (menuItem.getItemId()) {
+
+            case R.id.action_delete:
+                int positionToDelete = mSelector.getSelectedPositions().get(0);
+                Station stationToDelete = mDatabaseStations.get(positionToDelete);
+                DatabaseEvent deleteEvent =
+                        new DatabaseEvent(DatabaseEvent.Operation.DELETE_STATION, stationToDelete);
+                RadioApplication.sBus.post(deleteEvent);
+                actionMode.finish();
+                return true;
+
+            case R.id.action_edit:
+                // TODO
+                break;
+        }
+        return false;
+    }
+
     @Subscribe
     public void handleDatabaseEvent(DatabaseEvent event) {
         switch (event.operation) {
@@ -107,7 +148,6 @@ public class StationListFragment extends Fragment {
                 break;
 
             case UPDATE_STATION:
-                // FIXME
                 int positionToUpdate = mDatabaseStations.indexOf(event.station);
                 if (positionToUpdate > -1) {
                     mAdapter.notifyItemChanged(positionToUpdate);
@@ -120,7 +160,8 @@ public class StationListFragment extends Fragment {
 
     @Subscribe
     public void handlePlaybackEvent(PlaybackEvent event) {
-        if (mIsInActionMode) {
+        if (isInActionMode()) {
+            mAdapter.notifyDataSetChanged();
             return;
         }
 
@@ -134,7 +175,7 @@ public class StationListFragment extends Fragment {
 
     @Subscribe
     public void handleBufferEvent(BufferEvent event) {
-        if (!mIsInActionMode && !mSelector.getSelectedPositions().isEmpty()) {
+        if (!isInActionMode() && !mSelector.getSelectedPositions().isEmpty()) {
             int selectedPosition = mSelector.getSelectedPositions().get(0);
             mAdapter.notifyItemChanged(selectedPosition);
         }
@@ -147,7 +188,7 @@ public class StationListFragment extends Fragment {
             mSelector.setSelected(position, 0, true);
             // FIXME
 //            mListView.smoothScrollToPosition(position);
-        } else if (!mIsInActionMode) {
+        } else if (!isInActionMode()) {
             mSelector.clearSelections();
         }
         mAdapter.notifyDataSetChanged();
@@ -189,7 +230,7 @@ public class StationListFragment extends Fragment {
             mUrlTextView.setText(mStation.url);
 
             // show either playback animation, buffering icon or stop icon
-            boolean isSelected = mSelector.isSelected(getAdapterPosition(), 0) && !mIsInActionMode;
+            boolean isSelected = mSelector.isSelected(getAdapterPosition(), 0) && !isInActionMode();
             boolean isBuffering = RadioApplication.sDatabase.bufferingState == BufferEvent.BUFFERING;
             boolean isPlaying = RadioApplication.sDatabase.playbackState == PlaybackEvent.PLAY;
 
@@ -223,22 +264,26 @@ public class StationListFragment extends Fragment {
         @Override
         public void onClick(View v) {
             // close action mode on normal click
-            if (mActionMode != null) {
+            if (isInActionMode()) {
                 mActionMode.finish();
             }
 
-            mSelector.tapSelection(this);
+            if (!mSelector.isSelected(getAdapterPosition(), 0)) {
+                mSelector.setSelected(this, true);
+                RadioApplication.sBus.post(new SelectStationEvent(mStation));
+                RadioApplication.sBus.post(PlaybackEvent.PLAY);
+            }
 
-            RadioApplication.sBus.post(new SelectStationEvent(mStation));
-            RadioApplication.sBus.post(PlaybackEvent.PLAY);
         }
 
         @Override
         public boolean onLongClick(View v) {
-            // start action mode to delete/edit item
-            AppCompatActivity activity = (AppCompatActivity) getActivity();
-            mActionMode = activity.startSupportActionMode(mActionModeCallback);
             mSelector.setSelected(this, true);
+            if (!isInActionMode()) {
+                // start action mode to delete/edit item
+                AppCompatActivity activity = (AppCompatActivity) getActivity();
+                mActionMode = activity.startSupportActionMode(StationListFragment.this);
+            }
             return true;
         }
     }
@@ -264,48 +309,5 @@ public class StationListFragment extends Fragment {
         }
     }
 
-
-    /**
-     * ActionMode, which displays a menu to delete/edit stations
-     */
-    private class ActionModeCallback extends ModalMultiSelectorCallback {
-        public ActionModeCallback(MultiSelector multiSelector) {
-            super(multiSelector);
-        }
-
-        @Override
-        public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
-            // stop playback and show menu
-            mIsInActionMode = true;
-            RadioApplication.sBus.post(PlaybackEvent.STOP);
-            getActivity().getMenuInflater().inflate(R.menu.menu_selection, menu);
-            return true;
-        }
-
-        @Override
-        public void onDestroyActionMode(ActionMode actionMode) {
-            getMultiSelector().clearSelections();
-            mIsInActionMode = false;
-        }
-
-        @Override
-        public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
-            switch (menuItem.getItemId()) {
-                case R.id.action_delete:
-                    int positionToDelete = getMultiSelector().getSelectedPositions().get(0);
-                    Station stationToDelete = mDatabaseStations.get(positionToDelete);
-                    DatabaseEvent deleteEvent =
-                            new DatabaseEvent(DatabaseEvent.Operation.DELETE_STATION, stationToDelete);
-                    RadioApplication.sBus.post(deleteEvent);
-                    actionMode.finish();
-                    return true;
-
-                case R.id.action_edit:
-                    // TODO
-                    break;
-            }
-            return false;
-        }
-    }
 
 }
