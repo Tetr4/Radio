@@ -22,6 +22,7 @@ import de.winterrettich.ninaradio.event.AudioFocusEvent;
 import de.winterrettich.ninaradio.event.DismissNotificationEvent;
 import de.winterrettich.ninaradio.event.HeadphoneDisconnectEvent;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
+import de.winterrettich.ninaradio.event.PlayerErrorEvent;
 import de.winterrettich.ninaradio.event.SelectStationEvent;
 import de.winterrettich.ninaradio.event.adapter.AudioFocusCallbackToEventAdapter;
 import de.winterrettich.ninaradio.event.adapter.BroadcastToEventAdapter;
@@ -226,6 +227,12 @@ public class RadioPlayerService extends Service {
     @Subscribe
     public void handleDismissNotificationEvent(DismissNotificationEvent event) {
         // same as stop
+        RadioApplication.sBus.post(PlaybackEvent.STOP);
+    }
+
+    @Subscribe
+    public void handlePlayerErrorEvent(PlayerErrorEvent event) {
+        // stop playback on error
         RadioApplication.sBus.post(PlaybackEvent.STOP);
     }
 

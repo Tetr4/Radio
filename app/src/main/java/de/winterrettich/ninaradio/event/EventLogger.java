@@ -49,4 +49,9 @@ public class EventLogger {
                 event.station.name + " -> " + event.station.url);
     }
 
+    @Subscribe
+    public void handlePlayerErrorEvent(PlayerErrorEvent event) {
+        Log.i(TAG, PlayerErrorEvent.class.getSimpleName() + ": " + event.message);
+    }
+
 }

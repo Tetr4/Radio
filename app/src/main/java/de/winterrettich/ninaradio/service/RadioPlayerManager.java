@@ -10,23 +10,25 @@ import java.io.IOException;
 
 import de.winterrettich.ninaradio.RadioApplication;
 import de.winterrettich.ninaradio.event.BufferEvent;
+import de.winterrettich.ninaradio.event.PlaybackEvent;
+import de.winterrettich.ninaradio.event.PlayerErrorEvent;
 import de.winterrettich.ninaradio.model.Station;
 
 /**
  * encapsulates a {@link MediaPlayer}
  */
-public class RadioPlayerManager implements MediaPlayer.OnPreparedListener, MediaPlayer.OnInfoListener {
+public class RadioPlayerManager implements MediaPlayer.OnPreparedListener, MediaPlayer.OnInfoListener, MediaPlayer.OnErrorListener {
     public static final String TAG = RadioPlayerManager.class.getSimpleName();
     private Context mContext;
     private MediaPlayer mPlayer;
     private Station mStation;
     private boolean isPreparing = false;
-    private boolean isPaused = false;
-    private boolean cancelStart = false;
+    private boolean mustPrepare = true;
 
     public RadioPlayerManager(Context context) {
         mContext = context;
         initPlayer();
+
     }
 
     private void initPlayer() {
@@ -35,6 +37,7 @@ public class RadioPlayerManager implements MediaPlayer.OnPreparedListener, Media
         mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         mPlayer.setOnPreparedListener(this);
         mPlayer.setOnInfoListener(this);
+        mPlayer.setOnErrorListener(this);
         Log.d(TAG, "State: idle");
     }
 
@@ -43,7 +46,9 @@ public class RadioPlayerManager implements MediaPlayer.OnPreparedListener, Media
         Log.d(TAG, "State: prepared");
         RadioApplication.sBus.post(BufferEvent.DONE);
         isPreparing = false;
-        if (!cancelStart && !mp.isPlaying()) {
+        // check if state changed in the meantime
+        boolean correctState = RadioApplication.sDatabase.playbackState == PlaybackEvent.PLAY;
+        if (correctState && !mp.isPlaying()) {
             mp.start();
             Log.d(TAG, "State: started");
         } else {
@@ -56,17 +61,11 @@ public class RadioPlayerManager implements MediaPlayer.OnPreparedListener, Media
             throw new IllegalStateException("Select a Station before playing");
         }
 
-        cancelStart = false;
-
         if (mPlayer.isPlaying()) {
             Log.d(TAG, "already playing");
         } else if (isPreparing) {
             Log.d(TAG, "already called prepareAsync");
-        } else if (isPaused) {
-            Log.d(TAG, "resume");
-            mPlayer.start();
-            Log.d(TAG, "State: started");
-        } else {
+        } else if (mustPrepare) {
             Log.d(TAG, "preparing async");
             isPreparing = true;
             RadioApplication.sBus.post(BufferEvent.BUFFERING);
@@ -75,9 +74,13 @@ public class RadioPlayerManager implements MediaPlayer.OnPreparedListener, Media
             } catch (IllegalStateException e) {
                 // FIXME prepareAsync called in state 8
                 RadioApplication.sBus.post(BufferEvent.DONE);
-                Log.e(TAG, "Could not prepare", e);
-                e.printStackTrace();
+                restart();
+                //RadioApplication.sBus.post(new PlayerErrorEvent("Could not prepare media player"));
             }
+        } else {
+            Log.d(TAG, "resume");
+            mPlayer.start();
+            Log.d(TAG, "State: started");
         }
     }
 
@@ -88,18 +91,25 @@ public class RadioPlayerManager implements MediaPlayer.OnPreparedListener, Media
             Log.d(TAG, "State: paused");
         } else {
             Log.d(TAG, "already paused");
-            // not playing but prepareAsync may be called -> prevent starting in onPrepared
-            cancelStart = true;
         }
-        isPaused = true;
+        mustPrepare = false;
     }
 
     public void stop() {
         Log.d(TAG, "stopping");
         // cancel starting after prepareAsync callback
-        cancelStart = true;
         mPlayer.release();
         Log.d(TAG, "State: released");
+    }
+
+    private void restart() {
+        if (mPlayer != null) {
+            mPlayer.release();
+        }
+
+        initPlayer();
+        switchStation(mStation);
+        play();
     }
 
     public void switchStation(Station station) {
@@ -109,17 +119,20 @@ public class RadioPlayerManager implements MediaPlayer.OnPreparedListener, Media
             mPlayer.stop();
         }
         mPlayer.reset();
-        isPaused = false;
+        mustPrepare = true;
         isPreparing = false;
-        cancelStart = false;
 
         Log.d(TAG, "switching station");
         try {
             mPlayer.setDataSource(station.url);
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Could not switch station");
+            restart();
         }
         Log.d(TAG, "State: initialized");
+        if (RadioApplication.sDatabase.playbackState == PlaybackEvent.PLAY) {
+            play();
+        }
     }
 
     public void setVolume(float volume) {
@@ -140,4 +153,35 @@ public class RadioPlayerManager implements MediaPlayer.OnPreparedListener, Media
         return false;
     }
 
+    @Override
+    public boolean onError(MediaPlayer mp, int what, int extra) {
+        RadioApplication.sBus.post(BufferEvent.DONE);
+
+        switch (what) {
+            case MediaPlayer.MEDIA_ERROR_IO:
+                RadioApplication.sBus.post(new PlayerErrorEvent("MEDIA_ERROR_IO"));
+                break;
+            case MediaPlayer.MEDIA_ERROR_MALFORMED:
+                RadioApplication.sBus.post(new PlayerErrorEvent("MEDIA_ERROR_MALFORMED"));
+                break;
+            case MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK:
+                RadioApplication.sBus.post(new PlayerErrorEvent("MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK"));
+                break;
+            case MediaPlayer.MEDIA_ERROR_SERVER_DIED:
+                Log.w(TAG, "Restarting Media Player after media server died");
+                restart();
+                break;
+            case MediaPlayer.MEDIA_ERROR_TIMED_OUT:
+                RadioApplication.sBus.post(new PlayerErrorEvent("MEDIA_ERROR_TIMED_OUT"));
+                break;
+            case MediaPlayer.MEDIA_ERROR_UNKNOWN:
+                RadioApplication.sBus.post(new PlayerErrorEvent("MEDIA_ERROR_UNKNOWN"));
+                break;
+            case MediaPlayer.MEDIA_ERROR_UNSUPPORTED:
+                RadioApplication.sBus.post(new PlayerErrorEvent("MEDIA_ERROR_UNSUPPORTED"));
+                break;
+        }
+
+        return true;
+    }
 }
