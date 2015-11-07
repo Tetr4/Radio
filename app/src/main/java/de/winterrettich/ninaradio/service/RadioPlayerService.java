@@ -75,28 +75,32 @@ public class RadioPlayerService extends Service {
             mRadioNotificationManager = new RadioNotificationManager(this, mMediaSession);
             mRadioPlayerManager = new RadioPlayerManager(this);
 
-
             RadioApplication.sBus.register(this);
 
-            handleIntent(intent);
+            initPlayback();
         }
 
-        // restart with last station after being killed because of low memory
-        return START_REDELIVER_INTENT;
+        // don't let system restart service, as selected station, and playback state will be gone when the process is killed
+        // TODO persist station and playback state? e.g. save/load from preferences in RadioApplication
+        return START_NOT_STICKY;
     }
 
-    private void handleIntent(Intent intent) {
-        if (intent == null || intent.getExtras() == null || !intent.getExtras().containsKey(EXTRA_STATION)) {
-            Log.i(TAG, "Service started without station");
-            return;
+    private void initPlayback() {
+        Station station = RadioApplication.sDatabase.selectedStation;
+        PlaybackEvent state = RadioApplication.sDatabase.playbackState;
+
+        if (station != null) {
+            Log.i(TAG, "Service started with station: " + station.name);
+            mRadioNotificationManager.setStation(station);
+            mRadioPlayerManager.switchStation(station);
+        } else {
+            Log.w(TAG, "Service started without station");
         }
 
-        Station station = intent.getExtras().getParcelable(EXTRA_STATION);
-        Log.i(TAG, "Service started with station: " + station.name);
-        mRadioNotificationManager.setStation(station);
-        mRadioNotificationManager.setPlaybackState(PlaybackEvent.PLAY);
-        mRadioPlayerManager.switchStation(station);
-        mRadioPlayerManager.play();
+        if (state == PlaybackEvent.PLAY) {
+            mRadioNotificationManager.setPlaybackState(PlaybackEvent.PLAY);
+            mRadioPlayerManager.play();
+        }
     }
 
     @Override
@@ -203,7 +207,6 @@ public class RadioPlayerService extends Service {
                 //stopSelf();
                 // service will be stopped in application for now
                 // player stop and notification dismiss is handled in onDestroy
-                // TODO restart at some point?
                 break;
         }
     }

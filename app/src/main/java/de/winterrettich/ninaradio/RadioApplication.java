@@ -51,7 +51,6 @@ public class RadioApplication extends Application {
                 }
                 // start service
                 Intent serviceIntent = new Intent(this, RadioPlayerService.class);
-                serviceIntent.putExtra(RadioPlayerService.EXTRA_STATION, sDatabase.selectedStation);
                 startService(serviceIntent);
                 break;
 
