@@ -26,20 +26,6 @@ public class Station extends Model implements Comparable<Station> {
     }
 
     @Override
-    public boolean equals(Object other) {
-        if (other == null) return false;
-        if (other == this) return true;
-        if (!(other instanceof Station)) return false;
-        Station otherStation = (Station) other;
-        return getId().equals(otherStation.getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return getId().hashCode();
-    }
-
-    @Override
     public int compareTo(@NonNull Station another) {
         // compare lexographically
         return name.compareToIgnoreCase(another.name);
