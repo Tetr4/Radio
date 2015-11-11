@@ -56,12 +56,7 @@ public class RadioDatabase {
         // TODO database instead of preferences?
         if (mPreferences.contains(PREF_LAST_STATION_ID)) {
             long lastStationId = mPreferences.getLong(PREF_LAST_STATION_ID, -1);
-            for (Station station : mStations) {
-                if (station.getId() == lastStationId) {
-                    selectedStation = station;
-                    break;
-                }
-            }
+            selectedStation = findStationById(lastStationId);
         }
     }
 
@@ -103,6 +98,16 @@ public class RadioDatabase {
                 .from(Station.class)
                 .orderBy("Name ASC")
                 .execute();
+    }
+
+    public Station findStationById(long id) {
+        // TODO hashmap?
+        for (Station station : mStations) {
+            if (station.getId() == id) {
+                return station;
+            }
+        }
+        return null;
     }
 
     @Subscribe

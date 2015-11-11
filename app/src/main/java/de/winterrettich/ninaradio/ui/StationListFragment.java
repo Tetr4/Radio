@@ -111,19 +111,21 @@ public class StationListFragment extends Fragment implements ActionMode.Callback
 
     @Override
     public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
-        switch (menuItem.getItemId()) {
+        int positionToAlter = mSelector.getSelectedPositions().get(0);
+        Station stationToAlter = mDatabaseStations.get(positionToAlter);
 
+        switch (menuItem.getItemId()) {
             case R.id.action_delete:
-                int positionToDelete = mSelector.getSelectedPositions().get(0);
-                Station stationToDelete = mDatabaseStations.get(positionToDelete);
                 DatabaseEvent deleteEvent =
-                        new DatabaseEvent(DatabaseEvent.Operation.DELETE_STATION, stationToDelete);
+                        new DatabaseEvent(DatabaseEvent.Operation.DELETE_STATION, stationToAlter);
                 RadioApplication.sBus.post(deleteEvent);
                 actionMode.finish();
                 return true;
 
             case R.id.action_edit:
-                // TODO
+                Station editStation;
+                EditStationDialogFragment fragment = EditStationDialogFragment.newInstance(stationToAlter);
+                fragment.show(getFragmentManager(), "EditStationDialog");
                 break;
         }
         return false;

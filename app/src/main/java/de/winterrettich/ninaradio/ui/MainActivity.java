@@ -67,7 +67,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showAddStationDialog() {
-        new AddStationDialogFragment().show(getFragmentManager(), "AddStationDialog");
+        EditStationDialogFragment fragment = EditStationDialogFragment.newInstance();
+        fragment.show(getFragmentManager(), "AddStationDialog");
     }
 
     private void refreshUi() {
