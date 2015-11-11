@@ -15,10 +15,8 @@ import de.winterrettich.ninaradio.model.RadioDatabase;
 import de.winterrettich.ninaradio.service.RadioPlayerService;
 
 public class RadioApplication extends Application {
-    private static final String PREF_FIRST_LAUNCH = "PREF_FIRST_LAUNCH";
     public static Bus sBus = new Bus(ThreadEnforcer.MAIN);
     public static RadioDatabase sDatabase;
-    public static boolean sIsFirstLaunch;
     private EventLogger mLogger;
 
     @Override
@@ -30,15 +28,10 @@ public class RadioApplication extends Application {
         mLogger = new EventLogger();
         sBus.register(mLogger);
 
-        // check first launch
-        SharedPreferences prefs = getSharedPreferences(BuildConfig.APPLICATION_ID, MODE_PRIVATE);
-        sIsFirstLaunch = prefs.getBoolean(PREF_FIRST_LAUNCH, true);
-        // set to false next time
-        prefs.edit().putBoolean(PREF_FIRST_LAUNCH, false).apply();
-
         // database
+        SharedPreferences prefs = getSharedPreferences(BuildConfig.APPLICATION_ID, MODE_PRIVATE);
         ActiveAndroid.initialize(this);
-        sDatabase = new RadioDatabase();
+        sDatabase = new RadioDatabase(prefs);
         sBus.register(sDatabase);
     }
 

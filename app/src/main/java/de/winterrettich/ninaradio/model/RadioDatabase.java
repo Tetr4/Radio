@@ -1,5 +1,6 @@
 package de.winterrettich.ninaradio.model;
 
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.activeandroid.ActiveAndroid;
@@ -10,29 +11,69 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import de.winterrettich.ninaradio.RadioApplication;
 import de.winterrettich.ninaradio.event.BufferEvent;
 import de.winterrettich.ninaradio.event.DatabaseEvent;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
 import de.winterrettich.ninaradio.event.SelectStationEvent;
 
 public class RadioDatabase {
-    private List<Station> mStations;
+    public static final String TAG = RadioDatabase.class.getSimpleName();
+    private static final String PREF_FIRST_LAUNCH = "PREF_FIRST_LAUNCH";
+    private static final String PREF_LAST_STATION_ID = "PREF_LAST_STATION_ID";
+    private static final String PREF_LAST_STATE = "PREF_LAST_STATE";
+
     public PlaybackEvent playbackState = PlaybackEvent.STOP;
     public BufferEvent bufferingState = BufferEvent.BUFFERING;
     public Station selectedStation = null;
 
-    public RadioDatabase() {
-        if (RadioApplication.sIsFirstLaunch) {
-            Log.d("DB", "Adding default stations");
-            addDefaultStations();
+    private List<Station> mStations;
+    private SharedPreferences mPreferences;
+
+    public RadioDatabase(SharedPreferences prefs) {
+        mPreferences = prefs;
+
+        // check first launch
+        boolean isFirstLaunch = mPreferences.getBoolean(PREF_FIRST_LAUNCH, true);
+        // set to false next time
+        mPreferences.edit().putBoolean(PREF_FIRST_LAUNCH, false).apply();
+
+        initStations(isFirstLaunch);
+        initLastStation();
+        initLastState();
+    }
+
+    private void initStations(boolean isFirstLaunch) {
+        if (isFirstLaunch) {
+            Log.d(TAG, "Adding default stations");
+            loadDefaultStations();
         } else {
-            Log.d("DB", "Loading from db");
+            Log.d(TAG, "Loading stations from database");
             loadStationsFromDatabase();
         }
     }
 
-    private void addDefaultStations() {
+    private void initLastStation() {
+        // TODO database instead of preferences?
+        if (mPreferences.contains(PREF_LAST_STATION_ID)) {
+            long lastStationId = mPreferences.getLong(PREF_LAST_STATION_ID, -1);
+            for (Station station : mStations) {
+                if (station.getId() == lastStationId) {
+                    selectedStation = station;
+                    break;
+                }
+            }
+        }
+    }
+
+    private void initLastState() {
+        // TODO database instead of preferences?
+        if (mPreferences.contains(PREF_LAST_STATE)) {
+            String lastState = mPreferences.getString(PREF_LAST_STATE, PlaybackEvent.STOP.name());
+            playbackState = PlaybackEvent.valueOf(lastState);
+        }
+    }
+
+    private void loadDefaultStations() {
         mStations = new LinkedList<>();
         mStations.add(new Station("Rock", "http://197.189.206.172:8000/stream"));
         mStations.add(new Station("Spanisch", "http://usa8-vn.mixstream.net:8138"));
@@ -76,7 +117,6 @@ public class RadioDatabase {
                 event.station.delete();
                 break;
             case UPDATE_STATION:
-                // TODO update item with matching id?
                 event.station.save();
                 break;
         }
@@ -91,6 +131,11 @@ public class RadioDatabase {
     @Subscribe
     public void handleSelectStationEvent(SelectStationEvent event) {
         selectedStation = event.station;
+        if (event.station != null) {
+            mPreferences.edit().putLong(PREF_LAST_STATION_ID, event.station.getId()).apply();
+        } else {
+            mPreferences.edit().remove(PREF_LAST_STATION_ID).apply();
+        }
     }
 
     @Subscribe
@@ -101,9 +146,15 @@ public class RadioDatabase {
     @Subscribe
     public void handlePlaybackEvent(PlaybackEvent event) {
         playbackState = event;
+        SharedPreferences.Editor editor = mPreferences.edit();
+        editor.putString(PREF_LAST_STATE, event.name());
+
         if (event == PlaybackEvent.STOP) {
             selectedStation = null;
+            editor.remove(PREF_LAST_STATION_ID);
         }
+
+        editor.apply();
     }
 
 }

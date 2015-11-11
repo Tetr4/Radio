@@ -81,9 +81,8 @@ public class RadioPlayerService extends Service {
             initPlayback();
         }
 
-        // don't let system restart service, as selected station, and playback state will be gone when the process is killed
-        // TODO persist station and playback state? e.g. save/load from preferences in RadioApplication
-        return START_NOT_STICKY;
+        // Let system restart the service after crash, kill caused by low memory, etc.
+        return START_STICKY;
     }
 
     private void initPlayback() {
@@ -95,7 +94,9 @@ public class RadioPlayerService extends Service {
             mRadioNotificationManager.setStation(station);
             mRadioPlayerManager.switchStation(station);
         } else {
-            Log.w(TAG, "Service started without station");
+            // This should never happen
+            Log.e(TAG, "Service started without station");
+            stopSelf();
         }
 
         if (state == PlaybackEvent.PLAY) {
@@ -122,7 +123,8 @@ public class RadioPlayerService extends Service {
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         super.onTaskRemoved(rootIntent);
-        stopSelf();
+        Log.i(TAG, "Task removed");
+        RadioApplication.sBus.post(PlaybackEvent.STOP);
     }
 
     private void initBroadCastReceiver() {
