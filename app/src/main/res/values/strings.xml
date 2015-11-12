@@ -17,4 +17,7 @@
     <string name="station_url_hint">http://player.ffn.de/ffnstream.mp3</string>
     <string name="invalid_name">Please enter a name</string>
     <string name="invalid_url">This is not a valid URL</string>
+
+    <string name="station_deleted">Station deleted</string>
+    <string name="undo">UNDO</string>
 </resources>

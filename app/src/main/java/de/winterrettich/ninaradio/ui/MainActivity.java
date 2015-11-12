@@ -4,17 +4,22 @@ import android.media.AudioManager;
 import android.os.Bundle;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 
 import com.squareup.otto.Subscribe;
 
 import de.winterrettich.ninaradio.R;
 import de.winterrettich.ninaradio.RadioApplication;
+import de.winterrettich.ninaradio.event.DatabaseEvent;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
 import de.winterrettich.ninaradio.event.PlayerErrorEvent;
+import de.winterrettich.ninaradio.model.Station;
 
 public class MainActivity extends AppCompatActivity {
     private PlayBackControlsFragment mControlsFragment;
@@ -105,6 +110,34 @@ public class MainActivity extends AppCompatActivity {
                 showPlaybackControls();
             }
         }
+    }
+
+    @Subscribe
+    public void handleDatabaseEvent(DatabaseEvent event) {
+        final Station undoStation = new Station(event.station.name, event.station.url);
+        if (event.operation == DatabaseEvent.Operation.DELETE_STATION) {
+            // create undo snackbar
+            final CoordinatorLayout layout = (CoordinatorLayout) findViewById(R.id.root_layout);
+            Snackbar snackbar = Snackbar
+                    .make(layout, R.string.station_deleted, Snackbar.LENGTH_LONG)
+                    .setAction(R.string.undo, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            // undo by creating the station again
+                            DatabaseEvent undoEvent = new DatabaseEvent(DatabaseEvent.Operation.CREATE_STATION, undoStation);
+                            RadioApplication.sBus.post(undoEvent);
+                        }
+                    });
+
+            // change color
+            View view = snackbar.getView();
+            TextView tv = (TextView) view.findViewById(android.support.design.R.id.snackbar_action);
+            int color = ContextCompat.getColor(this, R.color.window_background);
+            tv.setTextColor(color);
+
+            snackbar.show();
+        }
+
     }
 
     @Subscribe
