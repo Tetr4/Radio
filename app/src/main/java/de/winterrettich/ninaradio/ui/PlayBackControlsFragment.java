@@ -28,13 +28,6 @@ public class PlayBackControlsFragment extends Fragment implements View.OnClickLi
         mFloatingActionButton = (FloatingActionButton) rootView.findViewById(R.id.fab);
         mFloatingActionButton.setOnClickListener(this);
 
-//        Snackbar
-//                .make(findViewById(R.id.root_layout),
-//                        "This is Snackbar",
-//                        Snackbar.LENGTH_LONG)
-//                .setAction("Action", this)
-//                .show(); // Do not forget to show!
-
         mPlayDrawable = ContextCompat.getDrawable(getActivity(), R.drawable.ic_play);
         mPauseDrawable = ContextCompat.getDrawable(getActivity(), R.drawable.ic_pause);
 
