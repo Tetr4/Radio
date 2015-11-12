@@ -157,6 +157,7 @@ public class RadioPlayerManager implements MediaPlayer.OnPreparedListener, Media
     public boolean onError(MediaPlayer mp, int what, int extra) {
         RadioApplication.sBus.post(BufferEvent.DONE);
 
+        // TODO String resources
         switch (what) {
             case MediaPlayer.MEDIA_ERROR_IO:
                 RadioApplication.sBus.post(new PlayerErrorEvent("MEDIA_ERROR_IO"));

@@ -2,6 +2,8 @@ package de.winterrettich.ninaradio.ui;
 
 import android.media.AudioManager;
 import android.os.Bundle;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
@@ -12,6 +14,7 @@ import com.squareup.otto.Subscribe;
 import de.winterrettich.ninaradio.R;
 import de.winterrettich.ninaradio.RadioApplication;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
+import de.winterrettich.ninaradio.event.PlayerErrorEvent;
 
 public class MainActivity extends AppCompatActivity {
     private PlayBackControlsFragment mControlsFragment;
@@ -102,6 +105,13 @@ public class MainActivity extends AppCompatActivity {
                 showPlaybackControls();
             }
         }
+    }
+
+    @Subscribe
+    public void handlePlayerErrorEvent(PlayerErrorEvent event) {
+        final CoordinatorLayout layout = (CoordinatorLayout) findViewById(R.id.root_layout);
+        Snackbar.make(layout, event.message, Snackbar.LENGTH_SHORT).show();
+
     }
 
 }
