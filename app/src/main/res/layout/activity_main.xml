@@ -14,21 +14,14 @@
         android:layout_marginRight="@dimen/activity_horizontal_margin"
         tools:layout="@layout/fragment_station_list" />
 
-    <!-- Layout needed for correct relative positioning in animation -->
-    <FrameLayout
-        android:layout_width="match_parent"
+    <fragment
+        android:id="@+id/fragment_playback_controls"
+        android:name="de.winterrettich.ninaradio.ui.PlayBackControlsFragment"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom">
-
-        <fragment
-            android:id="@+id/fragment_playback_controls"
-            android:name="de.winterrettich.ninaradio.ui.PlayBackControlsFragment"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|right"
-            android:layout_marginBottom="20dp"
-            android:layout_marginRight="20dp"
-            tools:layout="@layout/fragment_playback_controls" />
-    </FrameLayout>
+        android:layout_gravity="bottom|right"
+        android:layout_marginBottom="20dp"
+        android:layout_marginRight="20dp"
+        tools:layout="@layout/fragment_playback_controls" />
 
 </android.support.design.widget.CoordinatorLayout>

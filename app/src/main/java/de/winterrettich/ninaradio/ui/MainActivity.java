@@ -17,7 +17,6 @@ import com.squareup.otto.Subscribe;
 import de.winterrettich.ninaradio.R;
 import de.winterrettich.ninaradio.RadioApplication;
 import de.winterrettich.ninaradio.event.DatabaseEvent;
-import de.winterrettich.ninaradio.event.PlaybackEvent;
 import de.winterrettich.ninaradio.event.PlayerErrorEvent;
 import de.winterrettich.ninaradio.model.Station;
 
@@ -47,9 +46,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         RadioApplication.sBus.register(this);
-
-        // Playback state may have changed while paused
-        refreshUi();
     }
 
     @Override
@@ -77,39 +73,6 @@ public class MainActivity extends AppCompatActivity {
     private void showAddStationDialog() {
         EditStationDialogFragment fragment = EditStationDialogFragment.newInstance();
         fragment.show(getFragmentManager(), "AddStationDialog");
-    }
-
-    private void refreshUi() {
-        handlePlaybackEvent(RadioApplication.sDatabase.playbackState);
-    }
-
-    private void showPlaybackControls() {
-        getFragmentManager().beginTransaction()
-                .setCustomAnimations(
-                        R.animator.slide_in_from_bottom, R.animator.slide_out_to_bottom)
-                .show(mControlsFragment)
-                .commit();
-    }
-
-    private void hidePlaybackControls() {
-        getFragmentManager().beginTransaction()
-                .setCustomAnimations(
-                        R.animator.slide_in_from_bottom, R.animator.slide_out_to_bottom)
-                .hide(mControlsFragment)
-                .commit();
-    }
-
-    @Subscribe
-    public void handlePlaybackEvent(PlaybackEvent event) {
-        if (event == PlaybackEvent.STOP) {
-            if (!mControlsFragment.isHidden()) {
-                hidePlaybackControls();
-            }
-        } else {
-            if (mControlsFragment.isHidden()) {
-                showPlaybackControls();
-            }
-        }
     }
 
     @Subscribe

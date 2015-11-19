@@ -34,13 +34,12 @@ public class PlayBackControlsFragment extends Fragment implements View.OnClickLi
         return rootView;
     }
 
-
     @Override
     public void onResume() {
         super.onResume();
         RadioApplication.sBus.register(this);
 
-        // Playback state and station may have changed while paused
+        // Playback state may have changed while paused
         refreshUi();
     }
 
@@ -68,12 +67,15 @@ public class PlayBackControlsFragment extends Fragment implements View.OnClickLi
         switch (event) {
             case PLAY:
                 mFloatingActionButton.setImageDrawable(mPauseDrawable);
+                mFloatingActionButton.show();
                 break;
             case PAUSE:
                 mFloatingActionButton.setImageDrawable(mPlayDrawable);
+                mFloatingActionButton.show();
                 break;
             case STOP:
                 mFloatingActionButton.setImageDrawable(mPlayDrawable);
+                mFloatingActionButton.hide();
                 break;
         }
     }
