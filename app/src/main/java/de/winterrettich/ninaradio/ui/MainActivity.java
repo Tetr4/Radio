@@ -4,7 +4,9 @@ import android.media.AudioManager;
 import android.os.Bundle;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TabLayout;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
@@ -21,25 +23,36 @@ import de.winterrettich.ninaradio.event.PlayerErrorEvent;
 import de.winterrettich.ninaradio.model.Station;
 
 public class MainActivity extends AppCompatActivity {
-    private PlayBackControlsFragment mControlsFragment;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        initActionBar();
+        initTabs();
+
+        // change music stream volume while activity is running
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
+    }
+
+    private void initActionBar() {
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
+            actionBar.setElevation(0); // no shadow, so it doesn't overlap with the tab layout
             actionBar.setLogo(R.mipmap.ic_launcher);
             actionBar.setDisplayUseLogoEnabled(true);
             actionBar.setDisplayShowHomeEnabled(true);
         }
+    }
 
-        mControlsFragment = (PlayBackControlsFragment) getFragmentManager()
-                .findFragmentById(R.id.fragment_playback_controls);
+    private void initTabs() {
+        RadioPagerAdapter adapter = new RadioPagerAdapter(getSupportFragmentManager());
 
-        // change music stream volume while activity is running
-        setVolumeControlStream(AudioManager.STREAM_MUSIC);
+        ViewPager viewPager = (ViewPager) findViewById(R.id.viewpager);
+        viewPager.setAdapter(adapter);
+
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
+        tabLayout.setupWithViewPager(viewPager);
     }
 
     @Override
@@ -72,42 +85,47 @@ public class MainActivity extends AppCompatActivity {
 
     private void showAddStationDialog() {
         EditStationDialogFragment fragment = EditStationDialogFragment.newInstance();
-        fragment.show(getFragmentManager(), "AddStationDialog");
+        fragment.show(getSupportFragmentManager(), "AddStationDialog");
     }
 
     @Subscribe
     public void handleDatabaseEvent(DatabaseEvent event) {
-        final Station undoStation = new Station(event.station.name, event.station.url);
         if (event.operation == DatabaseEvent.Operation.DELETE_STATION) {
-            // create undo snackbar
-            final CoordinatorLayout layout = (CoordinatorLayout) findViewById(R.id.root_layout);
-            Snackbar snackbar = Snackbar
-                    .make(layout, R.string.station_deleted, Snackbar.LENGTH_LONG)
-                    .setAction(R.string.undo, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            // undo by creating the station again
-                            DatabaseEvent undoEvent = new DatabaseEvent(DatabaseEvent.Operation.CREATE_STATION, undoStation);
-                            RadioApplication.sBus.post(undoEvent);
-                        }
-                    });
-
-            // change color
-            View view = snackbar.getView();
-            TextView tv = (TextView) view.findViewById(android.support.design.R.id.snackbar_action);
-            int color = ContextCompat.getColor(this, R.color.window_background);
-            tv.setTextColor(color);
-
-            snackbar.show();
+            showUndoSnackbar(event.station);
         }
+    }
 
+    private void showUndoSnackbar(Station station) {
+        // TODO save position in station list?
+        final Station undoStation = new Station(station.name, station.url);
+
+        // create undo snackbar
+        final CoordinatorLayout layout = (CoordinatorLayout) findViewById(R.id.root_layout);
+        Snackbar snackbar = Snackbar
+                .make(layout, R.string.station_deleted, Snackbar.LENGTH_LONG)
+                .setAction(R.string.undo, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        // undo by creating the station again
+                        DatabaseEvent undoEvent = new DatabaseEvent(DatabaseEvent.Operation.CREATE_STATION, undoStation);
+                        RadioApplication.sBus.post(undoEvent);
+                    }
+                });
+
+        // change snackbar text color
+        View view = snackbar.getView();
+        TextView tv = (TextView) view.findViewById(android.support.design.R.id.snackbar_action);
+        int color = ContextCompat.getColor(this, R.color.window_background);
+        tv.setTextColor(color);
+
+        snackbar.show();
     }
 
     @Subscribe
     public void handlePlayerErrorEvent(PlayerErrorEvent event) {
+        // show error
         final CoordinatorLayout layout = (CoordinatorLayout) findViewById(R.id.root_layout);
         Snackbar.make(layout, event.message, Snackbar.LENGTH_SHORT).show();
-
     }
 
 }

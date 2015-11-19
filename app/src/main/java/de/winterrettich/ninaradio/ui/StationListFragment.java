@@ -1,9 +1,9 @@
 package de.winterrettich.ninaradio.ui;
 
-import android.app.Fragment;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
@@ -36,7 +36,6 @@ import de.winterrettich.ninaradio.model.Station;
 public class StationListFragment extends Fragment implements ActionMode.Callback {
     private List<Station> mDatabaseStations;
     private StationAdapter mAdapter;
-    private RecyclerView mRecyclerView;
     private SingleSelector mSelector = new SingleSelector();
 
     private ActionMode mActionMode;
@@ -50,10 +49,10 @@ public class StationListFragment extends Fragment implements ActionMode.Callback
 
         mSelector.setSelectable(true);
         mAdapter = new StationAdapter();
-        mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recycler_view);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        mRecyclerView.setAdapter(mAdapter);
-        //mRecyclerView.setHasFixedSize(true);
+        RecyclerView recyclerView = (RecyclerView) rootView.findViewById(R.id.recycler_view);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        recyclerView.setAdapter(mAdapter);
+        //recyclerView.setHasFixedSize(true);
 
         return rootView;
     }
@@ -123,7 +122,6 @@ public class StationListFragment extends Fragment implements ActionMode.Callback
                 return true;
 
             case R.id.action_edit:
-                Station editStation;
                 EditStationDialogFragment fragment = EditStationDialogFragment.newInstance(stationToAlter);
                 fragment.show(getFragmentManager(), "EditStationDialog");
                 break;
