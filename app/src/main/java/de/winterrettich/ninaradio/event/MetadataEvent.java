@@ -6,7 +6,7 @@ import android.text.TextUtils;
 import java.util.Map;
 
 public class MetadataEvent {
-    public Map<String, String> metadata;
+    public final Map<String, String> metadata;
 
     public MetadataEvent(Map<String, String> metadata) {
         this.metadata = metadata;
