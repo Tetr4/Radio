@@ -12,6 +12,7 @@ public class Station extends Model implements Comparable<Station> {
     @Column(name = "Name")
     public String name;
 
+    // TODO java.net.URL?
     @Column(name = "url")
     public String url;
 

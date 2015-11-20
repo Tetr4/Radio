@@ -56,7 +56,7 @@ public class EventLogger {
 
     @Subscribe
     public void handleMetadataEvent(MetadataEvent event) {
-        Log.i(TAG, MetadataEvent.class.getSimpleName() + ": " + event.title);
+        Log.i(TAG, MetadataEvent.class.getSimpleName() + ": " + event.getSongTitle());
     }
 
 }

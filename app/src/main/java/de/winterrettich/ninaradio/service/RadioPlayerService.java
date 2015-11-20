@@ -300,7 +300,9 @@ public class RadioPlayerService extends Service {
 
     @Subscribe
     public void handleMetadataEvent(MetadataEvent event) {
-        mRadioNotificationManager.setExtraText(event.title);
+        if (event.getSongTitle() != null) {
+            mRadioNotificationManager.setExtraText(event.getSongTitle());
+        }
     }
 
 }
