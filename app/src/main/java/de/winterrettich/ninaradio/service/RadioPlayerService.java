@@ -21,6 +21,7 @@ import de.winterrettich.ninaradio.event.AdjustVolumeEvent;
 import de.winterrettich.ninaradio.event.AudioFocusEvent;
 import de.winterrettich.ninaradio.event.DismissNotificationEvent;
 import de.winterrettich.ninaradio.event.HeadphoneDisconnectEvent;
+import de.winterrettich.ninaradio.event.MetadataEvent;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
 import de.winterrettich.ninaradio.event.PlayerErrorEvent;
 import de.winterrettich.ninaradio.event.SelectStationEvent;
@@ -57,6 +58,7 @@ public class RadioPlayerService extends Service {
     private RadioNotificationManager mRadioNotificationManager;
     private RadioPlayerManager mRadioPlayerManager;
     private AudioManager mAudioManager;
+    private MetadataRetriever mMetadataRetriever;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -75,6 +77,7 @@ public class RadioPlayerService extends Service {
 
             mRadioNotificationManager = new RadioNotificationManager(this, mMediaSession);
             mRadioPlayerManager = new RadioPlayerManager(this);
+            mMetadataRetriever = new MetadataRetriever();
 
             RadioApplication.sBus.register(this);
 
@@ -93,6 +96,7 @@ public class RadioPlayerService extends Service {
             Log.i(TAG, "Service started with station: " + station.name);
             mRadioNotificationManager.setStation(station);
             mRadioPlayerManager.switchStation(station);
+            mMetadataRetriever.switchStation(station);
         } else {
             // This should never happen
             Log.e(TAG, "Service started without station");
@@ -102,6 +106,7 @@ public class RadioPlayerService extends Service {
         if (state == PlaybackEvent.PLAY) {
             mRadioNotificationManager.setPlaybackState(PlaybackEvent.PLAY);
             mRadioPlayerManager.play();
+            mMetadataRetriever.start();
         }
     }
 
@@ -114,6 +119,7 @@ public class RadioPlayerService extends Service {
 
         mRadioNotificationManager.hideNotification();
         mRadioPlayerManager.stop();
+        mMetadataRetriever.stop();
         mWifiLock.release();
         mMediaSession.release();
 
@@ -201,10 +207,13 @@ public class RadioPlayerService extends Service {
             case PLAY:
                 mRadioPlayerManager.play();
                 mRadioNotificationManager.setPlaybackState(PlaybackEvent.PLAY);
+                mMetadataRetriever.start();
                 break;
             case PAUSE:
                 mRadioPlayerManager.pause();
                 mRadioNotificationManager.setPlaybackState(PlaybackEvent.PAUSE);
+                mRadioNotificationManager.clearExtraText();
+                mMetadataRetriever.stop();
                 break;
             case STOP:
                 //stopSelf();
@@ -218,6 +227,8 @@ public class RadioPlayerService extends Service {
     public void handleSelectStationEvent(SelectStationEvent event) {
         mRadioPlayerManager.switchStation(event.station);
         mRadioNotificationManager.setStation(event.station);
+        mRadioNotificationManager.clearExtraText();
+        mMetadataRetriever.switchStation(event.station);
     }
 
     @Subscribe
@@ -285,6 +296,11 @@ public class RadioPlayerService extends Service {
                 RadioApplication.sBus.post(new AdjustVolumeEvent(Math.min(DUCK_VOLUME, mLastVolume)));
                 break;
         }
+    }
+
+    @Subscribe
+    public void handleMetadataEvent(MetadataEvent event) {
+        mRadioNotificationManager.setExtraText(event.title);
     }
 
 }

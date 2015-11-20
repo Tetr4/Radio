@@ -54,4 +54,9 @@ public class EventLogger {
         Log.i(TAG, PlayerErrorEvent.class.getSimpleName() + ": " + event.message);
     }
 
+    @Subscribe
+    public void handleMetadataEvent(MetadataEvent event) {
+        Log.i(TAG, MetadataEvent.class.getSimpleName() + ": " + event.title);
+    }
+
 }

@@ -36,6 +36,7 @@ public class RadioNotificationManager {
     private MediaSessionCompat mMediaSession;
     private Station mStation = new Station("", "");
     private PlaybackEvent mPlaybackState = PlaybackEvent.PLAY;
+    private String mExtraText;
 
 
     public RadioNotificationManager(Context context, MediaSessionCompat mediaSession) {
@@ -63,10 +64,12 @@ public class RadioNotificationManager {
     }
 
     public void showNotification() {
+        String extra = mExtraText != null ? mExtraText : mStation.url;
+
         Notification.Builder builder = new Notification.Builder(mContext)
                 .setSmallIcon(R.drawable.ic_radio)
                 .setContentTitle(mStation.name)
-                .setContentText(mStation.url)
+                .setContentText(extra)
                 .setContentIntent(mMainIntent)
                 .setDeleteIntent(mDismissIntent)
                 .setWhen(0)
@@ -99,7 +102,7 @@ public class RadioNotificationManager {
             RemoteViews notificationView = new RemoteViews(mContext.getPackageName(),
                     R.layout.notification_playback_controls);
             notificationView.setTextViewText(R.id.title, mStation.name);
-            notificationView.setTextViewText(R.id.extra_info, mStation.url);
+            notificationView.setTextViewText(R.id.extra_info, extra);
 
             if (mPlaybackState == PlaybackEvent.PLAY) {
                 notificationView.setImageViewResource(R.id.play_pause, R.drawable.ic_pause);
@@ -131,4 +134,13 @@ public class RadioNotificationManager {
         showNotification();
     }
 
+    public void setExtraText(String extraText) {
+        mExtraText = extraText;
+        showNotification();
+    }
+
+    public void clearExtraText() {
+        mExtraText = null;
+        showNotification();
+    }
 }
