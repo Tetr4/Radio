@@ -16,6 +16,8 @@ import java.util.regex.Pattern;
 
 /**
  * @see <a href="</a>http://uniqueculture.net/2010/11/stream-metadata-plain-java">Get Stream Metadata with Plain Java for Your Android App</a>
+ * @see <a href="</a>http://www.smackfu.com/stuff/programming/shoutcast.html">Shoutcast Metadata Protocol</a>
+ *
  */
 public class MetaDataDecoder {
     private static final int CONNECTION_TIMEOUT = 5000;
@@ -113,7 +115,6 @@ public class MetaDataDecoder {
 
         // convert bytes to string (utf-8)
         String icyMetadataString = buffer.toString();
-        System.out.println(icyMetadataString);
 
         Map<String, String> icyMetadata = parseIcyMetadata(icyMetadataString);
         metadata.putAll(icyMetadata);
