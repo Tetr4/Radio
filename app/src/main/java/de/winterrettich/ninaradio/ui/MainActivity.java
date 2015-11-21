@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initTabs() {
-        RadioPagerAdapter adapter = new RadioPagerAdapter(getSupportFragmentManager());
+        RadioPagerAdapter adapter = new RadioPagerAdapter(getSupportFragmentManager(), getResources());
 
         ViewPager viewPager = (ViewPager) findViewById(R.id.viewpager);
         viewPager.setAdapter(adapter);

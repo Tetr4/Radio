@@ -1,23 +1,32 @@
 <resources>
     <string name="app_name">NinaRadio</string>
 
+    <!-- list items -->
+    <string name="play_station">Play station</string>
+
+    <!-- notification -->
     <string name="current_station">Station currently playing</string>
     <string name="current_url">Url of currently playing station</string>
-
-    <string name="play_station">Play station</string>
     <string name="play_pause">play or pause</string>
     <string name="pause">pause</string>
     <string name="play">play</string>
 
+    <!-- menu actions -->
     <string name="add_station">Add station</string>
     <string name="delete_station">Delete station</string>
     <string name="edit_station">Edit station</string>
 
+    <!-- new station dialog -->
     <string name="station_name_hint">FFN</string>
     <string name="station_url_hint">http://player.ffn.de/ffnstream.mp3</string>
     <string name="invalid_name">Please enter a name</string>
     <string name="invalid_url">This is not a valid URL</string>
 
+    <!-- snack bar -->
     <string name="station_deleted">Station deleted</string>
     <string name="undo">UNDO</string>
+
+    <!-- tabs -->
+    <string name="my_stations">My Stations</string>
+    <string name="discover">Discover</string>
 </resources>
