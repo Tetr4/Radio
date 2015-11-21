@@ -23,6 +23,7 @@ import com.bignerdranch.android.multiselector.SwappingHolder;
 import com.squareup.otto.Subscribe;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import de.winterrettich.ninaradio.R;
@@ -82,6 +83,7 @@ public class StationListFragment extends Fragment implements ActionMode.Callback
     private void synchronizeStationsWithDatabase() {
         // shallow copy
         mDatabaseStations = new ArrayList<>(RadioApplication.sDatabase.getStations());
+        Collections.sort(mDatabaseStations);
     }
 
     private boolean isInActionMode() {
@@ -135,8 +137,11 @@ public class StationListFragment extends Fragment implements ActionMode.Callback
 
             case CREATE_STATION:
                 synchronizeStationsWithDatabase();
-                int lastPosition = mDatabaseStations.size();
-                mAdapter.notifyItemInserted(lastPosition);
+                int positionToCreate = mDatabaseStations.indexOf(event.station);
+                if (positionToCreate > -1) {
+                    mAdapter.notifyItemInserted(positionToCreate);
+                }
+                // TODO smoothscroll to position
                 break;
 
             case DELETE_STATION:

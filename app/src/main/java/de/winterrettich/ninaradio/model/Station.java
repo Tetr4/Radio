@@ -28,7 +28,7 @@ public class Station extends Model implements Comparable<Station> {
 
     @Override
     public int compareTo(@NonNull Station another) {
-        // compare lexographically
+        // compare lexicographically
         return name.compareToIgnoreCase(another.name);
     }
 
