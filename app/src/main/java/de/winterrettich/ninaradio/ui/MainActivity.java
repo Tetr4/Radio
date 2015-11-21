@@ -7,8 +7,8 @@ import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -28,21 +28,17 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        initActionBar();
+        initToolbar();
         initTabs();
 
         // change music stream volume while activity is running
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
     }
 
-    private void initActionBar() {
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setElevation(0); // no shadow, so it doesn't overlap with the tab layout
-            actionBar.setLogo(R.mipmap.ic_launcher);
-            actionBar.setDisplayUseLogoEnabled(true);
-            actionBar.setDisplayShowHomeEnabled(true);
-        }
+    private void initToolbar() {
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        toolbar.setLogo(R.mipmap.ic_launcher);
     }
 
     private void initTabs() {
