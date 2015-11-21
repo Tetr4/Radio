@@ -167,13 +167,11 @@ public class StationListFragment extends Fragment implements ActionMode.Callback
     public void handlePlaybackEvent(PlaybackEvent event) {
         if (isInActionMode()) {
             mAdapter.notifyDataSetChanged();
-            return;
-        }
-
-        if (event == PlaybackEvent.STOP) {
-            mSelector.clearSelections();
         } else if (!mSelector.getSelectedPositions().isEmpty()) {
             int selectedPosition = mSelector.getSelectedPositions().get(0);
+            if (event == PlaybackEvent.STOP) {
+                mSelector.clearSelections();
+            }
             mAdapter.notifyItemChanged(selectedPosition);
         }
     }
