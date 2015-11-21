@@ -189,8 +189,7 @@ public class StationListFragment extends Fragment implements ActionMode.Callback
         int position = mDatabaseStations.indexOf(event.station);
         if (position >= 0) {
             mSelector.setSelected(position, 0, true);
-            // FIXME
-//            mListView.smoothScrollToPosition(position);
+            // TODO smoothscroll to position
         } else if (!isInActionMode()) {
             mSelector.clearSelections();
         }

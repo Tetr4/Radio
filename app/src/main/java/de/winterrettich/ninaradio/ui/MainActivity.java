@@ -92,7 +92,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showUndoSnackbar(Station station) {
-        // TODO save position in station list?
         final Station undoStation = new Station(station.name, station.url);
 
         // create undo snackbar
