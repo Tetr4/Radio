@@ -24,8 +24,8 @@ import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.RootMatchers.isDialog;
 import static android.support.test.espresso.matcher.ViewMatchers.hasDescendant;
 import static android.support.test.espresso.matcher.ViewMatchers.hasErrorText;
+import static android.support.test.espresso.matcher.ViewMatchers.hasFocus;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.isSelected;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.CoreMatchers.any;
@@ -48,18 +48,19 @@ public class AddStationDialogTest {
     @Rule
     public ActivityTestRule<MainActivity> mActivityRule = new ActivityTestRule<>(MainActivity.class);
 
+    @Test
     public void testLayout() {
         openAddStationDialog();
 
-        // Check if edittext is selected
-        onView(withId(R.id.station_name)).check(matches(isSelected()));
+        // Check if station name field has  Focus
+        onView(withId(R.id.station_name)).check(matches(hasFocus()));
 
         // Check edittext positions
         onView(withId(R.id.station_name)).check(isAbove(withId(R.id.station_url)));
     }
 
     @Test
-    public void testAddStation_valid() {
+    public void testAddValidStation() {
         openAddStationDialog();
 
         // Add a station via the dialog
@@ -72,7 +73,7 @@ public class AddStationDialogTest {
     }
 
     @Test
-    public void testAddStation_invalid() {
+    public void testAddInvalidStation() {
         openAddStationDialog();
 
         // Click OK without entering a name
@@ -90,7 +91,7 @@ public class AddStationDialogTest {
     }
 
     @Test
-    public void testAddStation_cancel() {
+    public void testCancel() {
         openAddStationDialog();
 
         // Enter station data but click cancel
@@ -104,7 +105,7 @@ public class AddStationDialogTest {
 
     private void openAddStationDialog() {
         // Click on add icon in menu
-        onView(ViewMatchers.withId(R.id.action_add_station)).perform(click());
+        onView(withId(R.id.action_add_station)).perform(click());
 
         // Check if dialog (actually edittext in dialog) is displayed
         onView(withId(R.id.station_name)).inRoot(isDialog()).check(matches(isDisplayed()));
