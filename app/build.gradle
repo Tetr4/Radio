@@ -10,6 +10,8 @@ android {
         targetSdkVersion 24
         versionCode 1
         versionName "1.0"
+
+        testInstrumentationRunner 'de.winterrettich.ninaradio.MockApplicationRunner'
     }
     buildTypes {
         release {
@@ -20,17 +22,28 @@ android {
 }
 
 repositories {
-    mavenCentral()
+    // ActiveAndroid repo
     maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.android.support:appcompat-v7:24.1.1'
     compile 'com.android.support:cardview-v7:24.1.1'
-    compile 'com.android.support:recyclerview-v7:24.1.1'
     compile 'com.android.support:design:24.1.1'
+    compile 'com.android.support:recyclerview-v7:24.1.1'
     compile 'com.bignerdranch.android:recyclerview-multiselect:0.2'
-    compile 'com.squareup:otto:1.3.7'
+    compile 'com.squareup:otto:1.3.8' // TODO switch to RxAndroid?
     compile 'com.michaelpardo:activeandroid:3.1.0-SNAPSHOT'
+
+    // JUnit + Hamcrest
+    androidTestCompile 'com.android.support.test:runner:0.5'
+    androidTestCompile 'com.android.support.test:rules:0.5'
+    androidTestCompile 'com.android.support:support-annotations:24.1.1'
+    androidTestCompile 'org.hamcrest:hamcrest-core:1.3'
+    androidTestCompile 'org.hamcrest:hamcrest-library:1.3'
+    // Espresso
+    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2'
+    // Mockito
+    androidTestCompile 'org.mockito:mockito-core:1.10.19'
+    androidTestCompile 'com.google.dexmaker:dexmaker-mockito:1.2'
 }

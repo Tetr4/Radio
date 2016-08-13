@@ -18,9 +18,9 @@ import de.winterrettich.ninaradio.event.SelectStationEvent;
 
 public class RadioDatabase {
     public static final String TAG = RadioDatabase.class.getSimpleName();
-    private static final String PREF_FIRST_LAUNCH = "PREF_FIRST_LAUNCH";
-    private static final String PREF_LAST_STATION_ID = "PREF_LAST_STATION_ID";
-    private static final String PREF_LAST_STATE = "PREF_LAST_STATE";
+    public static final String PREF_FIRST_LAUNCH = "PREF_FIRST_LAUNCH";
+    public static final String PREF_LAST_STATION_ID = "PREF_LAST_STATION_ID";
+    public static final String PREF_LAST_STATE = "PREF_LAST_STATE";
 
     public PlaybackEvent playbackState = PlaybackEvent.STOP;
     public BufferEvent bufferingState = BufferEvent.BUFFERING;

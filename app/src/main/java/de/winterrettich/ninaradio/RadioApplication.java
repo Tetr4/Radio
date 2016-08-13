@@ -24,11 +24,16 @@ public class RadioApplication extends Application {
         super.onCreate();
         sBus.register(this);
 
-        // logger
+        setupLogger();
+        setupDatabase();
+    }
+
+    protected void setupLogger() {
         mLogger = new EventLogger();
         sBus.register(mLogger);
+    }
 
-        // database
+    protected void setupDatabase() {
         SharedPreferences prefs = getSharedPreferences(BuildConfig.APPLICATION_ID, MODE_PRIVATE);
         ActiveAndroid.initialize(this);
         sDatabase = new RadioDatabase(prefs);
