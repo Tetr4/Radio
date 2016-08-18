@@ -16,7 +16,7 @@
 
     <!-- Station list -->
     <dimen name="station_item_height">72dp</dimen>
-    <dimen name="station_item_icon_margin_left">12dp</dimen>
-    <dimen name="station_item_text_margin_left">60dp</dimen>
-    <dimen name="station_list_footer_height">106dp</dimen>
+    <dimen name="station_item_icon_size">36dp</dimen>
+    <dimen name="station_item_icon_margin">16dp</dimen>
+    <dimen name="station_item_text_margin_right">16dp</dimen>
 </resources>

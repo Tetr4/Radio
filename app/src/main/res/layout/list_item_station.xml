@@ -1,31 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="@dimen/station_item_height"
-    android:background="?android:selectableItemBackground">
+    android:background="?android:selectableItemBackground"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:baselineAligned="false" >
     <!--android:background="@drawable/station_list_selector"-->
 
     <!-- icon -->
     <FrameLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_centerVertical="true"
-        android:layout_marginLeft="@dimen/station_item_icon_margin_left">
+        android:layout_width="@dimen/station_item_icon_size"
+        android:layout_height="@dimen/station_item_icon_size"
+        android:layout_margin="@dimen/station_item_icon_margin">
 
         <ImageView
             android:id="@+id/icon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:contentDescription="@string/play_station"
             android:src="@drawable/ic_radio"
             android:tint="@color/accent" />
 
         <ProgressBar
             android:id="@+id/icon_buffering"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:contentDescription="@string/play_station"
             android:indeterminateOnly="true"
             android:tint="@color/accent"
@@ -33,8 +34,8 @@
 
         <ImageView
             android:id="@+id/icon_playing"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:contentDescription="@string/play_station"
             android:src="@drawable/ic_equalizer"
             android:tint="@color/accent"
@@ -43,13 +44,13 @@
     </FrameLayout>
 
 
+    <!-- name and url -->
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
+        android:layout_weight="1"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_centerVertical="true"
-        android:layout_marginLeft="@dimen/station_item_text_margin_left"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:layout_marginRight="@dimen/station_item_text_margin_right">
 
         <TextView
             android:id="@+id/name"
@@ -73,4 +74,4 @@
 
     </LinearLayout>
 
-</RelativeLayout>
+</LinearLayout>
