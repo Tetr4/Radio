@@ -9,7 +9,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Space;
 import android.widget.TextView;
@@ -156,7 +155,6 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.StationH
             mUrlTextView.setText(mStation.url);
 
             // show either playback animation, buffering icon or stop icon
-            //boolean isSelected = mSelector.isSelected(getAdapterPosition(), 0);
             boolean isSelected = mStation.equals(RadioApplication.sDatabase.selectedStation);
             boolean isBuffering = RadioApplication.sDatabase.bufferingState == BufferEvent.BUFFERING;
             boolean isPaused = RadioApplication.sDatabase.playbackState == PlaybackEvent.PAUSE;
