@@ -9,7 +9,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.Space;
 import android.widget.TextView;
 
 import com.bignerdranch.android.multiselector.SingleSelector;
@@ -124,6 +126,7 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.StationH
         private final TextView mNameTextView;
         private final TextView mUrlTextView;
         private final MaterialFavoriteButton mFavoriteButton;
+        private final Space mFavoriteGonePadding;
 
         private Station mStation;
 
@@ -143,6 +146,7 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.StationH
             mNameTextView = (TextView) itemView.findViewById(R.id.name);
             mUrlTextView = (TextView) itemView.findViewById(R.id.description);
             mFavoriteButton = (MaterialFavoriteButton) itemView.findViewById(R.id.favorite_button);
+            mFavoriteGonePadding = (Space) itemView.findViewById(R.id.favorite_gone_padding);
         }
 
         public void bindStation(Station station) {
@@ -185,6 +189,7 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.StationH
 
             if (!mShowFavorites) {
                 mFavoriteButton.setVisibility(View.GONE);
+                mFavoriteGonePadding.setVisibility(View.VISIBLE);
             } else {
                 // don't receive callback for initial setting
                 mFavoriteButton.setOnFavoriteChangeListener(null);
