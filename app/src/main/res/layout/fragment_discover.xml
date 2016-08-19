@@ -1,16 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical">
 
-    <!-- TODO: implement layout -->
-    <TextView
+    <SearchView
+        android:id="@+id/searchView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Discover Stations\n(not implemented yet)"
-        android:layout_gravity="center"
-        android:gravity="center"
-        android:textColor="@android:color/primary_text_dark" />
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="16dp"
+        android:iconifiedByDefault="false" />
 
-</FrameLayout>
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/result_list"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:scrollbars="vertical"
+        tools:listitem="@layout/list_item_station"/>
+
+</LinearLayout>

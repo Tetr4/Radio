@@ -29,7 +29,7 @@ public class RadioPagerAdapter extends FragmentPagerAdapter {
     public Fragment getItem(int position) {
         switch (position) {
             case STATION_LIST_FRAGMENT_POSITION:
-                return new StationListFragment();
+                return new FavoriteStationsFragment();
 
             case DISCOVER_FRAGMENT_POSITION:
                 return new DiscoverFragment();

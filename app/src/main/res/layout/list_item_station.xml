@@ -49,8 +49,7 @@
         android:layout_width="0dp"
         android:layout_weight="1"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginRight="@dimen/station_item_text_margin_right">
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/name"
@@ -73,5 +72,10 @@
             tools:text="http://197.189.206.172:8000/stream" />
 
     </LinearLayout>
+
+    <com.github.ivbaranov.mfb.MaterialFavoriteButton
+        android:id="@+id/favorite_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 
 </LinearLayout>

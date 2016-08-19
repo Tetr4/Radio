@@ -69,7 +69,7 @@ public class AddStationDialogTest {
         onView(withId(android.R.id.button1)).perform(click()); // OK button
 
         // Check that the station is added
-        onView(withId(R.id.recycler_view)).check(matches(hasDescendant(withText(STATION_NAME))));
+        onView(withId(R.id.favorites_list)).check(matches(hasDescendant(withText(STATION_NAME))));
     }
 
     @Test
@@ -100,7 +100,7 @@ public class AddStationDialogTest {
         onView(withId(android.R.id.button2)).perform(click()); // cancel button
 
         // Check that no station is added
-        onView(withId(R.id.recycler_view)).check(matches(not(hasDescendant(any(View.class)))));
+        onView(withId(R.id.favorites_list)).check(matches(not(hasDescendant(any(View.class)))));
     }
 
     private void openAddStationDialog() {
