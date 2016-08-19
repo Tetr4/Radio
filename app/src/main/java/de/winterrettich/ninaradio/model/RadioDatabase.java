@@ -110,6 +110,15 @@ public class RadioDatabase {
         return null;
     }
 
+    public Station findMatchingStation(String name, String url) {
+        for (Station station : mStations) {
+            if (station.name.equals(name) && station.url.equals(url)) {
+                return station;
+            }
+        }
+        return null;
+    }
+
     @Subscribe
     public void handleDatabaseEvent(DatabaseEvent event) {
         switch (event.operation) {
