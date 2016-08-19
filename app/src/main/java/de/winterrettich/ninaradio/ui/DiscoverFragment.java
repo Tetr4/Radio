@@ -4,25 +4,32 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.SearchView;
 
 import com.squareup.otto.Subscribe;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import de.winterrettich.ninaradio.R;
 import de.winterrettich.ninaradio.RadioApplication;
 import de.winterrettich.ninaradio.event.BufferEvent;
 import de.winterrettich.ninaradio.event.DatabaseEvent;
+import de.winterrettich.ninaradio.event.DiscoverErrorEvent;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
 import de.winterrettich.ninaradio.event.SelectStationEvent;
 import de.winterrettich.ninaradio.model.Station;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
-public class DiscoverFragment extends Fragment implements StationAdapter.StationClickListener {
-
+public class DiscoverFragment extends Fragment implements StationAdapter.StationClickListener, SearchView.OnQueryTextListener {
+    private static final String TAG = DiscoverFragment.class.getSimpleName();
     private StationAdapter mAdapter;
 
     @Override
@@ -35,7 +42,10 @@ public class DiscoverFragment extends Fragment implements StationAdapter.Station
         RecyclerView favoritesList = (RecyclerView) rootView.findViewById(R.id.result_list);
         favoritesList.setLayoutManager(new LinearLayoutManager(getActivity()));
         favoritesList.setAdapter(mAdapter);
-        //favoritesList.setHasFixedSize(true);
+        favoritesList.setHasFixedSize(true);
+
+        SearchView searchView = (SearchView) rootView.findViewById(R.id.search_view);
+        searchView.setOnQueryTextListener(this);
 
         return rootView;
     }
@@ -96,4 +106,43 @@ public class DiscoverFragment extends Fragment implements StationAdapter.Station
     public void handleSelectStationEvent(SelectStationEvent event) {
         mAdapter.setSelection(event.station);
     }
+
+    @Subscribe
+    public void handleDatabaseEvent(DatabaseEvent event) {
+        mAdapter.updateStation(event.station);
+    }
+
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        Call<List<Station>> call = RadioApplication.sDiscovererService.search(query);
+        call.enqueue(new Callback<List<Station>>() {
+            @Override
+            public void onResponse(Call<List<Station>> call, Response<List<Station>> response) {
+                List<Station> stations = response.body();
+                mAdapter.setStations(stations);
+                if (stations.isEmpty()) {
+                    String message = getString(R.string.no_stations_discovered);
+                    RadioApplication.sBus.post(new DiscoverErrorEvent(message));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Station>> call, Throwable t) {
+                String message = getString(R.string.error_discovering_stations);
+                RadioApplication.sBus.post(new DiscoverErrorEvent(message));
+                Log.e(TAG, message, t);
+            }
+        });
+        return true;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        if (newText.length() == 0) {
+            mAdapter.setStations(Collections.<Station>emptyList());
+            return true;
+        }
+        return false;
+    }
+
 }

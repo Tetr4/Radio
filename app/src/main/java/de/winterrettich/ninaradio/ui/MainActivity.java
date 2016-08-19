@@ -19,14 +19,19 @@ import com.squareup.otto.Subscribe;
 import de.winterrettich.ninaradio.R;
 import de.winterrettich.ninaradio.RadioApplication;
 import de.winterrettich.ninaradio.event.DatabaseEvent;
+import de.winterrettich.ninaradio.event.DiscoverErrorEvent;
 import de.winterrettich.ninaradio.event.PlayerErrorEvent;
 import de.winterrettich.ninaradio.model.Station;
 
 public class MainActivity extends AppCompatActivity {
+    private CoordinatorLayout mCoordinatorLayout;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mCoordinatorLayout = (CoordinatorLayout) findViewById(R.id.root_layout);
 
         initToolbar();
         initTabs();
@@ -91,18 +96,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void showUndoSnackbar(Station station) {
-        final Station undoStation = new Station(station.name, station.url);
-
+    private void showUndoSnackbar(final Station station) {
         // create undo snackbar
-        final CoordinatorLayout layout = (CoordinatorLayout) findViewById(R.id.root_layout);
         Snackbar snackbar = Snackbar
-                .make(layout, R.string.station_deleted, Snackbar.LENGTH_LONG)
+                .make(mCoordinatorLayout, R.string.station_deleted, Snackbar.LENGTH_LONG)
                 .setAction(R.string.undo, new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         // undo by creating the station again
-                        DatabaseEvent undoEvent = new DatabaseEvent(DatabaseEvent.Operation.CREATE_STATION, undoStation);
+                        DatabaseEvent undoEvent = new DatabaseEvent(DatabaseEvent.Operation.CREATE_STATION, station);
                         RadioApplication.sBus.post(undoEvent);
                     }
                 });
@@ -119,8 +121,13 @@ public class MainActivity extends AppCompatActivity {
     @Subscribe
     public void handlePlayerErrorEvent(PlayerErrorEvent event) {
         // show error
-        final CoordinatorLayout layout = (CoordinatorLayout) findViewById(R.id.root_layout);
-        Snackbar.make(layout, event.message, Snackbar.LENGTH_SHORT).show();
+        Snackbar.make(mCoordinatorLayout, event.message, Snackbar.LENGTH_SHORT).show();
+    }
+
+    @Subscribe
+    public void handleDiscoverErrorEvent(DiscoverErrorEvent event) {
+        // show error
+        Snackbar.make(mCoordinatorLayout, event.message, Snackbar.LENGTH_SHORT).show();
     }
 
 }
