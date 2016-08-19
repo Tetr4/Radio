@@ -43,7 +43,7 @@ public class FavoriteStationsFragment extends Fragment implements ActionMode.Cal
         RecyclerView favoritesList = (RecyclerView) rootView.findViewById(R.id.favorites_list);
         favoritesList.setLayoutManager(new LinearLayoutManager(getActivity()));
         favoritesList.setAdapter(mAdapter);
-        //favoritesList.setHasFixedSize(true);
+        favoritesList.setHasFixedSize(true);
 
         return rootView;
     }
@@ -133,6 +133,8 @@ public class FavoriteStationsFragment extends Fragment implements ActionMode.Cal
                 mAdapter.updateStation(event.station);
                 break;
         }
+
+        mAdapter.setSelection(RadioApplication.sDatabase.selectedStation);
     }
 
     @Subscribe

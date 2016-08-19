@@ -110,6 +110,7 @@ public class DiscoverFragment extends Fragment implements StationAdapter.Station
     @Subscribe
     public void handleDatabaseEvent(DatabaseEvent event) {
         mAdapter.updateStation(event.station);
+        mAdapter.setSelection(RadioApplication.sDatabase.selectedStation);
     }
 
     @Override
