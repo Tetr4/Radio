@@ -59,4 +59,9 @@ public class EventLogger {
         Log.i(TAG, MetadataEvent.class.getSimpleName() + ": " + event.getSongTitle());
     }
 
+    @Subscribe
+    public void handleDiscoverErrorEvent(DiscoverErrorEvent event) {
+        Log.i(TAG, MetadataEvent.class.getSimpleName() + ": " + event.message);
+    }
+
 }
