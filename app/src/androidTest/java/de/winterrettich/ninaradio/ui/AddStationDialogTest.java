@@ -2,7 +2,6 @@ package de.winterrettich.ninaradio.ui;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.matcher.ViewMatchers;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.view.View;
@@ -34,23 +33,22 @@ import static org.hamcrest.Matchers.isEmptyOrNullString;
 
 @RunWith(AndroidJUnit4.class)
 public class AddStationDialogTest {
-
     private static final String STATION_NAME = "Test Station";
     private static final String STATION_URL = "http://player.ffn.de/ffnstream.mp3";
 
+    @Rule
+    public ActivityTestRule<MainActivity> mActivityRule = new ActivityTestRule<>(MainActivity.class);
+
     @Before
-    public void setup() {
+    public void clearDatabase() {
         Context context = InstrumentationRegistry.getTargetContext().getApplicationContext();
         MockApplication app = (MockApplication) context;
         app.clearDatabase();
     }
 
-    @Rule
-    public ActivityTestRule<MainActivity> mActivityRule = new ActivityTestRule<>(MainActivity.class);
-
     @Test
-    public void testLayout() {
-        openAddStationDialog();
+    public void testLayout() throws Exception {
+        openDialog();
 
         // Check if station name field has  Focus
         onView(withId(R.id.station_name)).check(matches(hasFocus()));
@@ -60,8 +58,8 @@ public class AddStationDialogTest {
     }
 
     @Test
-    public void testAddValidStation() {
-        openAddStationDialog();
+    public void testAddValidStation() throws Exception {
+        openDialog();
 
         // Add a station via the dialog
         onView(withId(R.id.station_name)).perform(typeText(STATION_NAME));
@@ -73,8 +71,8 @@ public class AddStationDialogTest {
     }
 
     @Test
-    public void testAddInvalidStation() {
-        openAddStationDialog();
+    public void testAddInvalidStation() throws Exception {
+        openDialog();
 
         // Click OK without entering a name
         onView(withId(android.R.id.button1)).perform(click());
@@ -91,8 +89,8 @@ public class AddStationDialogTest {
     }
 
     @Test
-    public void testCancel() {
-        openAddStationDialog();
+    public void testCancel() throws Exception {
+        openDialog();
 
         // Enter station data but click cancel
         onView(withId(R.id.station_name)).perform(typeText(STATION_NAME));
@@ -103,7 +101,7 @@ public class AddStationDialogTest {
         onView(withId(R.id.favorites_list)).check(matches(not(hasDescendant(any(View.class)))));
     }
 
-    private void openAddStationDialog() {
+    private void openDialog() {
         // Click on add icon in menu
         onView(withId(R.id.action_add_station)).perform(click());
 
