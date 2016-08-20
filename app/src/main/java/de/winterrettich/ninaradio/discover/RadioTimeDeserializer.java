@@ -27,7 +27,11 @@ public class RadioTimeDeserializer implements JsonDeserializer<List<Station>> {
     public static final Type STATION_LIST_TYPE = new TypeToken<List<Station>>() {
     }.getType();
     private static final String TAG = RadioTimeDeserializer.class.getSimpleName();
-    private OkHttpClient mClient = new OkHttpClient();
+    private OkHttpClient mClient;
+
+    public RadioTimeDeserializer(OkHttpClient client) {
+        mClient = client;
+    }
 
     @Override
     public List<Station> deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {

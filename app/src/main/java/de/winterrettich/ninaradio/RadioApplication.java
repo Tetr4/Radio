@@ -17,6 +17,7 @@ import de.winterrettich.ninaradio.event.EventLogger;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
 import de.winterrettich.ninaradio.model.RadioDatabase;
 import de.winterrettich.ninaradio.service.RadioPlayerService;
+import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -47,13 +48,16 @@ public class RadioApplication extends Application {
     }
 
     protected void setupDiscoverService() {
+        OkHttpClient client = new OkHttpClient();
+
         Gson gson = new GsonBuilder()
-                .registerTypeAdapter(RadioTimeDeserializer.STATION_LIST_TYPE, new RadioTimeDeserializer())
+                .registerTypeAdapter(RadioTimeDeserializer.STATION_LIST_TYPE, new RadioTimeDeserializer(client))
                 .create();
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("http://opml.radiotime.com/")
                 .addConverterFactory(GsonConverterFactory.create(gson))
+                .client(client)
                 .build();
         sDiscovererService = retrofit.create(DiscoverService.class);
     }
