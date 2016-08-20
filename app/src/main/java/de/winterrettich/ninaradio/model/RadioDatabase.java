@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.activeandroid.ActiveAndroid;
 import com.activeandroid.query.Select;
+import com.activeandroid.sqlbrite.BriteDatabase;
 import com.squareup.otto.Subscribe;
 
 import java.util.Collections;
@@ -47,26 +48,21 @@ public class RadioDatabase {
 
     private void loadDefaultStations() {
         mStations = new LinkedList<>();
-        mStations.add(new Station("Rock", "http://197.189.206.172:8000/stream"));
-        mStations.add(new Station("Spanisch", "http://usa8-vn.mixstream.net:8138"));
         mStations.add(new Station("FFN", "http://player.ffn.de/ffnstream.mp3"));
         mStations.add(new Station("Antenne Niedersachsen", "http://stream.antenne.com/antenne-nds/mp3-128/radioplayer/"));
         mStations.add(new Station("1Live", "http://gffstream.ic.llnwd.net/stream/gffstream_stream_wdr_einslive_a"));
         mStations.add(new Station("Radio Gütersloh", "http://edge.live.mp3.mdn.newmedia.nacamar.net/radioguetersloh/livestream.mp3"));
-        mStations.add(new Station("Rock2", "http://197.189.206.172:8000/stream"));
-        mStations.add(new Station("Rock3", "http://197.189.206.172:8000/stream"));
-        mStations.add(new Station("Rock4", "http://197.189.206.172:8000/stream"));
-        mStations.add(new Station("Rock5", "http://197.189.206.172:8000/stream"));
+        mStations.add(new Station("Der Barde", "http://stream.laut.fm/der-barde"));
 
         // save all
-        ActiveAndroid.beginTransaction();
+        BriteDatabase.Transaction transaction = ActiveAndroid.beginTransaction();
         try {
             for (Station station : mStations) {
                 station.save();
             }
-            ActiveAndroid.setTransactionSuccessful();
+            ActiveAndroid.setTransactionSuccessful(transaction);
         } finally {
-            ActiveAndroid.endTransaction();
+            ActiveAndroid.endTransaction(transaction);
         }
     }
 
