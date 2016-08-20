@@ -9,9 +9,20 @@ import android.os.Looper;
 import com.activeandroid.ActiveAndroid;
 import com.activeandroid.Configuration;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import de.winterrettich.ninaradio.discover.DiscoverService;
 import de.winterrettich.ninaradio.event.DatabaseEvent;
 import de.winterrettich.ninaradio.model.RadioDatabase;
 import de.winterrettich.ninaradio.model.Station;
+import retrofit2.Call;
+import retrofit2.Retrofit;
+import retrofit2.http.Query;
+import retrofit2.mock.BehaviorDelegate;
+import retrofit2.mock.MockRetrofit;
+import retrofit2.mock.NetworkBehavior;
 
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyLong;
@@ -46,13 +57,45 @@ public class MockApplication extends RadioApplication {
         sBus.register(sDatabase);
     }
 
+    @Override
+    protected void setupDiscoverService() {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://opml.radiotime.com/")
+                .build();
+
+        NetworkBehavior networkBehavior = NetworkBehavior.create();
+        networkBehavior.setDelay(0, TimeUnit.MILLISECONDS);
+
+        MockRetrofit mockRetrofit = new MockRetrofit.Builder(retrofit)
+                .networkBehavior(networkBehavior)
+                .build();
+        final BehaviorDelegate<DiscoverService> delegate = mockRetrofit.create(DiscoverService.class);
+
+        sDiscovererService = new DiscoverService() {
+            @Override
+            public Call<List<Station>> search(@Query("query") String query) {
+                List<Station> stations = new ArrayList<>();
+
+                // find existing station
+                Station station = RadioApplication.sDatabase.findMatchingStation(query, "");
+                if (station == null) {
+                    // create new station
+                    station = new Station(query, "");
+                }
+                stations.add(station);
+
+                return delegate.returningResponse(stations).search(query);
+            }
+        };
+    }
+
     public void clearDatabase() {
         // run on main thread
         Handler handler = new Handler(Looper.getMainLooper());
         handler.post(new Runnable() {
             @Override
             public void run() {
-                for (Station station: sDatabase.getStations()) {
+                for (Station station : sDatabase.getStations()) {
                     sBus.post(new DatabaseEvent(DatabaseEvent.Operation.DELETE_STATION, station));
                 }
             }
