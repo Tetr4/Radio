@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import de.winterrettich.ninaradio.RadioApplication;
 import de.winterrettich.ninaradio.model.Station;
@@ -25,9 +24,9 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class RadioTimeDeserializer implements JsonDeserializer<List<Station>> {
+    public static final Type STATION_LIST_TYPE = new TypeToken<List<Station>>() {
+    }.getType();
     private static final String TAG = RadioTimeDeserializer.class.getSimpleName();
-    public static final Type STATION_LIST_TYPE = new TypeToken<List<Station>>(){}.getType();
-
     private OkHttpClient mClient = new OkHttpClient();
 
     @Override

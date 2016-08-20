@@ -220,7 +220,9 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.StationH
 
     public interface StationClickListener {
         void onClick(Station station);
+
         boolean onLongClick(Station station);
+
         void onFavoriteChanged(Station station, boolean favorite);
     }
 

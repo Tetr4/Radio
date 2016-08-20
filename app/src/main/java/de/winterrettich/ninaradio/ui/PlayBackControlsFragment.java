@@ -16,7 +16,6 @@ import de.winterrettich.ninaradio.RadioApplication;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
 
 public class PlayBackControlsFragment extends Fragment implements View.OnClickListener {
-
     private Drawable mPlayDrawable;
     private Drawable mPauseDrawable;
     private FloatingActionButton mFloatingActionButton;

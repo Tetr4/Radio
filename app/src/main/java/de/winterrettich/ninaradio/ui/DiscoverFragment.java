@@ -12,7 +12,6 @@ import android.widget.SearchView;
 
 import com.squareup.otto.Subscribe;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
