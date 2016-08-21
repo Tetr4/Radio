@@ -43,7 +43,6 @@ public class MainActivity extends AppCompatActivity {
     private void initToolbar() {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        toolbar.setLogo(R.mipmap.ic_launcher);
     }
 
     private void initTabs() {
