@@ -109,7 +109,6 @@ public class DiscoverFragment extends Fragment implements StationAdapter.Station
     @Subscribe
     public void handleDatabaseEvent(DatabaseEvent event) {
         mAdapter.updateStation(event.station);
-        mAdapter.setSelection(RadioApplication.sDatabase.selectedStation);
     }
 
     @Override
@@ -123,6 +122,9 @@ public class DiscoverFragment extends Fragment implements StationAdapter.Station
                 if (stations.isEmpty()) {
                     String message = getString(R.string.no_stations_discovered);
                     RadioApplication.sBus.post(new DiscoverErrorEvent(message));
+                } else {
+                    // a station may already be playing
+                    mAdapter.setSelection(RadioApplication.sDatabase.selectedStation);
                 }
             }
 
@@ -139,6 +141,7 @@ public class DiscoverFragment extends Fragment implements StationAdapter.Station
     @Override
     public boolean onQueryTextChange(String newText) {
         if (newText.length() == 0) {
+            mAdapter.clearSelection();
             mAdapter.setStations(Collections.<Station>emptyList());
             return true;
         }

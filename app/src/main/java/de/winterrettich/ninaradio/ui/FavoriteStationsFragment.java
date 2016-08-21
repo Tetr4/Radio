@@ -123,6 +123,10 @@ public class FavoriteStationsFragment extends Fragment implements ActionMode.Cal
                 Collections.sort(stations);
                 int positionToCreate = stations.indexOf(event.station);
                 mAdapter.insertStation(event.station, positionToCreate);
+                if (mAdapter.getSelection() == null) {
+                    // the new station may already be playing
+                    mAdapter.setSelection(RadioApplication.sDatabase.selectedStation);
+                }
                 break;
 
             case DELETE_STATION:
@@ -134,7 +138,6 @@ public class FavoriteStationsFragment extends Fragment implements ActionMode.Cal
                 break;
         }
 
-        mAdapter.setSelection(RadioApplication.sDatabase.selectedStation);
     }
 
     @Subscribe
