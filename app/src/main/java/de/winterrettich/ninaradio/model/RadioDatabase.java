@@ -89,6 +89,9 @@ public class RadioDatabase {
                 return station;
             }
         }
+        if (selectedStation != null && selectedStation.name.equals(name) && selectedStation.url.equals(url)) {
+            return selectedStation;
+        }
         return null;
     }
 
