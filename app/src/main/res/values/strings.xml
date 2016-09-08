@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">NinaRadio</string>
+    <string name="app_name" translatable="false">NinaRadio</string>
 
     <!-- list items -->
     <string name="play_station">Play station</string>
@@ -17,8 +17,8 @@
     <string name="edit_station">Edit station</string>
 
     <!-- new station dialog -->
-    <string name="station_name_hint">FFN</string>
-    <string name="station_url_hint">http://player.ffn.de/ffnstream.mp3</string>
+    <string name="station_name_hint" translatable="false">FFN</string>
+    <string name="station_url_hint" translatable="false">http://player.ffn.de/ffnstream.mp3</string>
     <string name="invalid_name">Please enter a name</string>
     <string name="invalid_url">This is not a valid URL</string>
 
