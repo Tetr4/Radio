@@ -48,7 +48,7 @@ public class RadioPlayerService extends Service {
     private float mLastVolume;
     private boolean mResumeAfterGain;
     private boolean mAdjustVolumeAfterGain;
-    private boolean mSkipOverwrite;
+    private boolean mSkipNextEvent;
 
     private MediaSessionCompat mMediaSession;
     private WifiManager.WifiLock mWifiLock;
@@ -71,7 +71,7 @@ public class RadioPlayerService extends Service {
 
         if (mMediaSession == null) {
             initWifiLock();
-            initAudioFocus();
+            initAudioManager();
             initMediaSession();
             initBroadCastReceiver();
 
@@ -90,24 +90,17 @@ public class RadioPlayerService extends Service {
 
     private void initPlayback() {
         Station station = RadioApplication.sDatabase.selectedStation;
-        PlaybackEvent state = RadioApplication.sDatabase.playbackState;
-
-        if (station != null) {
-            Log.i(TAG, "Service started with station: " + station.name);
-            mRadioNotificationManager.setStation(station);
-            mRadioPlayerManager.switchStation(station);
-            mMetadataRetriever.switchStation(station);
-        } else {
+        if (station == null) {
             // This should never happen
             Log.e(TAG, "Service started without station");
             stopSelf();
+            return;
         }
+        Log.i(TAG, "Service started with station: " + station.name);
+        handleSelectStationEvent(new SelectStationEvent(station));
 
-        if (state == PlaybackEvent.PLAY) {
-            mRadioNotificationManager.setPlaybackState(PlaybackEvent.PLAY);
-            mRadioPlayerManager.play();
-            mMetadataRetriever.start();
-        }
+        PlaybackEvent state = RadioApplication.sDatabase.playbackState;
+        handlePlaybackEvent(state);
     }
 
     @Override
@@ -151,18 +144,10 @@ public class RadioPlayerService extends Service {
         mWifiLock.acquire();
     }
 
-    private void initAudioFocus() {
+    private void initAudioManager() {
         // request AudioFocus + callbacks
         mAudioFocusCallback = new AudioFocusCallbackToEventAdapter();
-
         mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
-        int result = mAudioManager.requestAudioFocus(mAudioFocusCallback, AudioManager.STREAM_MUSIC,
-                AudioManager.AUDIOFOCUS_GAIN);
-
-        if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            Log.w(TAG, "Could not get audio focus");
-        }
-
         mLastVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
     }
 
@@ -195,21 +180,27 @@ public class RadioPlayerService extends Service {
     @Subscribe
     public void handlePlaybackEvent(PlaybackEvent event) {
         // TODO refactor to something better
-        if (mSkipOverwrite) {
+        if (mSkipNextEvent) {
             // this event pauses playback, just after focus loss
-            mSkipOverwrite = false;
+            mSkipNextEvent = false;
         } else {
             // external event (e.g. user input while during focus loss)
-            mResumeAfterGain = false;  // overwrite autoresume after focus loss
+            mResumeAfterGain = false; // overwrite autoresume after focus loss
         }
 
         switch (event) {
             case PLAY:
+                int result = mAudioManager.requestAudioFocus(mAudioFocusCallback, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+                if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                    Log.w(TAG, "Could not get audio focus");
+                    break;
+                }
                 mRadioPlayerManager.play();
                 mRadioNotificationManager.setPlaybackState(PlaybackEvent.PLAY);
                 mMetadataRetriever.start();
                 break;
             case PAUSE:
+                mAudioManager.abandonAudioFocus(mAudioFocusCallback);
                 mRadioPlayerManager.pause();
                 mRadioNotificationManager.setPlaybackState(PlaybackEvent.PAUSE);
                 mRadioNotificationManager.clearExtraText();
@@ -252,9 +243,9 @@ public class RadioPlayerService extends Service {
     @Subscribe
     public void handleAdjustVolumeEvent(AdjustVolumeEvent event) {
         // TODO refactor to something better
-        if (mSkipOverwrite) {
+        if (mSkipNextEvent) {
             // this event sets the duck volume, just after focus loss
-            mSkipOverwrite = false;
+            mSkipNextEvent = false;
         } else {
             // external event (e.g. user input while during focus loss)
             mAdjustVolumeAfterGain = false; // overwrite duck volume
@@ -277,14 +268,14 @@ public class RadioPlayerService extends Service {
                 break;
 
             case AUDIOFOCUS_LOSS:
-                RadioApplication.sBus.post(PlaybackEvent.STOP);
+                RadioApplication.sBus.post(PlaybackEvent.PAUSE);
                 break;
 
             case AUDIOFOCUS_LOSS_TRANSIENT:
                 // Lost focus for a short time
                 PlaybackEvent currentPlaybackState = RadioApplication.sDatabase.playbackState;
                 mResumeAfterGain = currentPlaybackState == PlaybackEvent.PLAY;
-                mSkipOverwrite = true;
+                mSkipNextEvent = true;
                 RadioApplication.sBus.post(PlaybackEvent.PAUSE);
                 break;
 
@@ -292,7 +283,7 @@ public class RadioPlayerService extends Service {
                 // Lost focus for a short time but can play at low volume
                 mLastVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
                 mAdjustVolumeAfterGain = true;
-                mSkipOverwrite = true;
+                mSkipNextEvent = true;
                 RadioApplication.sBus.post(new AdjustVolumeEvent(Math.min(DUCK_VOLUME, mLastVolume)));
                 break;
         }
