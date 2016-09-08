@@ -24,6 +24,7 @@
 
     <!-- snack bar -->
     <string name="station_deleted">Station deleted</string>
+    <string name="media_error">Playback error</string>
     <string name="undo">UNDO</string>
 
     <!-- tabs -->

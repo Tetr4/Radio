@@ -8,6 +8,7 @@ import android.util.Log;
 
 import java.io.IOException;
 
+import de.winterrettich.ninaradio.R;
 import de.winterrettich.ninaradio.RadioApplication;
 import de.winterrettich.ninaradio.event.BufferEvent;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
@@ -157,30 +158,34 @@ public class RadioPlayerManager implements MediaPlayer.OnPreparedListener, Media
     public boolean onError(MediaPlayer mp, int what, int extra) {
         RadioApplication.sBus.post(BufferEvent.DONE);
 
-        // TODO String resources
-        switch (what) {
-            case MediaPlayer.MEDIA_ERROR_IO:
-                RadioApplication.sBus.post(new PlayerErrorEvent("MEDIA_ERROR_IO"));
-                break;
-            case MediaPlayer.MEDIA_ERROR_MALFORMED:
-                RadioApplication.sBus.post(new PlayerErrorEvent("MEDIA_ERROR_MALFORMED"));
-                break;
-            case MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK:
-                RadioApplication.sBus.post(new PlayerErrorEvent("MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK"));
-                break;
-            case MediaPlayer.MEDIA_ERROR_SERVER_DIED:
-                Log.w(TAG, "Restarting Media Player after media server died");
-                restart();
-                break;
-            case MediaPlayer.MEDIA_ERROR_TIMED_OUT:
-                RadioApplication.sBus.post(new PlayerErrorEvent("MEDIA_ERROR_TIMED_OUT"));
-                break;
-            case MediaPlayer.MEDIA_ERROR_UNKNOWN:
-                RadioApplication.sBus.post(new PlayerErrorEvent("MEDIA_ERROR_UNKNOWN"));
-                break;
-            case MediaPlayer.MEDIA_ERROR_UNSUPPORTED:
-                RadioApplication.sBus.post(new PlayerErrorEvent("MEDIA_ERROR_UNSUPPORTED"));
-                break;
+        if (what == MediaPlayer.MEDIA_ERROR_SERVER_DIED) {
+            Log.w(TAG, "Restarting Media Player after media server died");
+            restart();
+        } else {
+            String error_message = mContext.getString(R.string.media_error) + ": ";
+            switch (what) {
+                case MediaPlayer.MEDIA_ERROR_IO:
+                    error_message += "MEDIA_ERROR_IO";
+                    break;
+                case MediaPlayer.MEDIA_ERROR_MALFORMED:
+                    error_message += "MEDIA_ERROR_MALFORMED";
+                    break;
+                case MediaPlayer.MEDIA_ERROR_UNSUPPORTED:
+                    error_message += "MEDIA_ERROR_UNSUPPORTED";
+                    break;
+                case MediaPlayer.MEDIA_ERROR_TIMED_OUT:
+                    error_message += "MEDIA_ERROR_TIMED_OUT";
+                    break;
+                case MediaPlayer.MEDIA_ERROR_UNKNOWN:
+                    error_message += "MEDIA_ERROR_UNKNOWN";
+                    break;
+                case MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK:
+                    error_message += "MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK";
+                    break;
+                default:
+                    error_message = error_message.trim();
+            }
+            RadioApplication.sBus.post(new PlayerErrorEvent(error_message));
         }
 
         return true;
