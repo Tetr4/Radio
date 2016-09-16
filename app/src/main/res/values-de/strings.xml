@@ -18,4 +18,5 @@
     <string name="play_station">Sender abspielen</string>
     <string name="station_deleted">Sender gelöscht</string>
     <string name="undo">Rückgängig</string>
+    <string name="please_wait">Suche Sender…</string>
 </resources>

@@ -33,6 +33,8 @@ public class DiscoverFragment extends Fragment implements StationAdapter.Station
     private static final String TAG = DiscoverFragment.class.getSimpleName();
     private StationAdapter mAdapter;
     private SearchView mSearchView;
+    private View mProgressIndicator;
+    private Call<List<Station>> mSearchCall;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -40,6 +42,8 @@ public class DiscoverFragment extends Fragment implements StationAdapter.Station
 
         mAdapter = new StationAdapter(this);
         mAdapter.showFavorites(true);
+
+        mProgressIndicator = rootView.findViewById(R.id.progress_indicator);
 
         RecyclerView favoritesList = (RecyclerView) rootView.findViewById(R.id.result_list);
         favoritesList.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -118,7 +122,6 @@ public class DiscoverFragment extends Fragment implements StationAdapter.Station
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
 
-
         // focus/unfocus the Searchview when scrolling to/from the fragment
         if (mSearchView == null) {
             return;
@@ -136,13 +139,33 @@ public class DiscoverFragment extends Fragment implements StationAdapter.Station
     public boolean onQueryTextSubmit(String query) {
         mSearchView.clearFocus();
 
+        resetSearch();
+
+        // show progressbar
+        mProgressIndicator.setVisibility(View.VISIBLE);
+
         // search for stations
-        Call<List<Station>> call = RadioApplication.sDiscovererService.search(query);
-        call.enqueue(new Callback<List<Station>>() {
+        mSearchCall = RadioApplication.sDiscovererService.search(query);
+        mSearchCall.enqueue(new Callback<List<Station>>() {
             @Override
             public void onResponse(Call<List<Station>> call, Response<List<Station>> response) {
+                mProgressIndicator.setVisibility(View.GONE);
+
+                if (!response.isSuccessful()) {
+                    String message = getString(R.string.error_discovering_stations);
+                    String rawMessage = response.raw().message();
+                    if (rawMessage != null) {
+                        message += " (" + response.raw().message() + ")";
+                    }
+                    RadioApplication.sBus.post(new DiscoverErrorEvent(message));
+                    return;
+                }
+
                 List<Station> stations = response.body();
+
+                // show stations
                 mAdapter.setStations(stations);
+
                 if (stations.isEmpty()) {
                     String message = getString(R.string.no_stations_discovered);
                     RadioApplication.sBus.post(new DiscoverErrorEvent(message));
@@ -154,9 +177,10 @@ public class DiscoverFragment extends Fragment implements StationAdapter.Station
 
             @Override
             public void onFailure(Call<List<Station>> call, Throwable t) {
+                mProgressIndicator.setVisibility(View.GONE);
                 String message = getString(R.string.error_discovering_stations);
-                RadioApplication.sBus.post(new DiscoverErrorEvent(message));
                 Log.e(TAG, message, t);
+                RadioApplication.sBus.post(new DiscoverErrorEvent(message));
             }
         });
         return true;
@@ -165,11 +189,20 @@ public class DiscoverFragment extends Fragment implements StationAdapter.Station
     @Override
     public boolean onQueryTextChange(String newText) {
         if (newText.length() == 0) {
-            mAdapter.clearSelection();
-            mAdapter.setStations(Collections.<Station>emptyList());
+            resetSearch();
             return true;
         }
         return false;
+    }
+
+    private void resetSearch() {
+        if (mSearchCall != null) {
+            // cancel running search calls
+            mSearchCall.cancel();
+        }
+        mProgressIndicator.setVisibility(View.GONE);
+        mAdapter.clearSelection();
+        mAdapter.setStations(Collections.<Station>emptyList());
     }
 
 }

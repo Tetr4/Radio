@@ -34,4 +34,5 @@
     <!-- discover fragment -->
     <string name="no_stations_discovered">No stations discovered</string>
     <string name="error_discovering_stations">Error: Could not discover stations</string>
+    <string name="please_wait">Searching…</string>
 </resources>
