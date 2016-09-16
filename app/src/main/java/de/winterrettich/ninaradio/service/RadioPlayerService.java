@@ -84,6 +84,11 @@ public class RadioPlayerService extends Service {
             initPlayback();
         }
 
+        if (intent == null) {
+            // service was recreated by system
+            mRadioPlayerManager.restart();
+        }
+
         // Let system restart the service after crash, kill caused by low memory, etc.
         return START_STICKY;
     }

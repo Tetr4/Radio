@@ -20,20 +20,24 @@ import de.winterrettich.ninaradio.event.SelectStationEvent;
 public class RadioDatabase {
     public static final String TAG = RadioDatabase.class.getSimpleName();
     public static final String PREF_FIRST_LAUNCH = "PREF_FIRST_LAUNCH";
+    public static final String PREF_LAST_STATION_ID = "PREF_LAST_STATION_ID";
 
     public PlaybackEvent playbackState = PlaybackEvent.STOP;
     public BufferEvent bufferingState = BufferEvent.BUFFERING;
     public Station selectedStation = null;
 
     private List<Station> mStations;
+    private SharedPreferences mPreferences;
 
     public RadioDatabase(SharedPreferences prefs) {
+        mPreferences = prefs;
         // check first launch
         boolean isFirstLaunch = prefs.getBoolean(PREF_FIRST_LAUNCH, true);
         // set to false next time
         prefs.edit().putBoolean(PREF_FIRST_LAUNCH, false).apply();
 
         initStations(isFirstLaunch);
+        initLastStation();
     }
 
     private void initStations(boolean isFirstLaunch) {
@@ -43,6 +47,15 @@ public class RadioDatabase {
         } else {
             Log.d(TAG, "Loading stations from database");
             loadStationsFromDatabase();
+        }
+    }
+
+    private void initLastStation() {
+        // load last station, e.g. when app is recreated after being terminated because of low memory
+        if (mPreferences.contains(PREF_LAST_STATION_ID)) {
+            long lastStationId = mPreferences.getLong(PREF_LAST_STATION_ID, -1);
+            selectedStation = findStationById(lastStationId);
+            playbackState = PlaybackEvent.PAUSE;
         }
     }
 
@@ -121,6 +134,11 @@ public class RadioDatabase {
     @Subscribe
     public void handleSelectStationEvent(SelectStationEvent event) {
         selectedStation = event.station;
+        if (event.station != null) {
+            mPreferences.edit().putLong(PREF_LAST_STATION_ID, event.station.getId()).apply();
+        } else {
+            mPreferences.edit().remove(PREF_LAST_STATION_ID).apply();
+        }
     }
 
     @Subscribe
@@ -133,6 +151,7 @@ public class RadioDatabase {
         playbackState = event;
         if (event == PlaybackEvent.STOP) {
             selectedStation = null;
+            mPreferences.edit().remove(PREF_LAST_STATION_ID).apply();
         }
     }
 

@@ -29,7 +29,6 @@ public class RadioPlayerManager implements MediaPlayer.OnPreparedListener, Media
     public RadioPlayerManager(Context context) {
         mContext = context;
         initPlayer();
-
     }
 
     private void initPlayer() {
@@ -103,7 +102,7 @@ public class RadioPlayerManager implements MediaPlayer.OnPreparedListener, Media
         Log.d(TAG, "State: released");
     }
 
-    private void restart() {
+    void restart() {
         if (mPlayer != null) {
             mPlayer.release();
         }
@@ -162,32 +161,31 @@ public class RadioPlayerManager implements MediaPlayer.OnPreparedListener, Media
             Log.w(TAG, "Restarting Media Player after media server died");
             restart();
         } else {
-            String error_message = mContext.getString(R.string.media_error) + ": ";
+            String error_message = mContext.getString(R.string.media_error);
             switch (what) {
                 case MediaPlayer.MEDIA_ERROR_IO:
-                    error_message += "MEDIA_ERROR_IO";
+                    error_message += ": MEDIA_ERROR_IO";
                     break;
                 case MediaPlayer.MEDIA_ERROR_MALFORMED:
-                    error_message += "MEDIA_ERROR_MALFORMED";
+                    error_message += ": MEDIA_ERROR_MALFORMED";
                     break;
                 case MediaPlayer.MEDIA_ERROR_UNSUPPORTED:
-                    error_message += "MEDIA_ERROR_UNSUPPORTED";
+                    error_message += ": MEDIA_ERROR_UNSUPPORTED";
                     break;
                 case MediaPlayer.MEDIA_ERROR_TIMED_OUT:
-                    error_message += "MEDIA_ERROR_TIMED_OUT";
+                    error_message += ": MEDIA_ERROR_TIMED_OUT";
                     break;
                 case MediaPlayer.MEDIA_ERROR_UNKNOWN:
-                    error_message += "MEDIA_ERROR_UNKNOWN";
+                    error_message += ": MEDIA_ERROR_UNKNOWN";
                     break;
                 case MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK:
-                    error_message += "MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK";
+                    error_message += ": MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK";
                     break;
-                default:
-                    error_message = error_message.trim();
             }
             RadioApplication.sBus.post(new PlayerErrorEvent(error_message));
         }
 
         return true;
     }
+
 }
