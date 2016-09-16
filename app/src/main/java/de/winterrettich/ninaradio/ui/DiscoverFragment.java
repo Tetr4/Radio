@@ -1,5 +1,6 @@
 package de.winterrettich.ninaradio.ui;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -8,6 +9,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.SearchView;
 
 import com.squareup.otto.Subscribe;
@@ -30,6 +32,7 @@ import retrofit2.Response;
 public class DiscoverFragment extends Fragment implements StationAdapter.StationClickListener, SearchView.OnQueryTextListener {
     private static final String TAG = DiscoverFragment.class.getSimpleName();
     private StationAdapter mAdapter;
+    private SearchView mSearchView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -43,8 +46,8 @@ public class DiscoverFragment extends Fragment implements StationAdapter.Station
         favoritesList.setAdapter(mAdapter);
         favoritesList.setHasFixedSize(true);
 
-        SearchView searchView = (SearchView) rootView.findViewById(R.id.search_view);
-        searchView.setOnQueryTextListener(this);
+        mSearchView = (SearchView) rootView.findViewById(R.id.search_view);
+        mSearchView.setOnQueryTextListener(this);
 
         return rootView;
     }
@@ -112,7 +115,28 @@ public class DiscoverFragment extends Fragment implements StationAdapter.Station
     }
 
     @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+
+
+        // focus/unfocus the Searchview when scrolling to/from the fragment
+        if (mSearchView == null) {
+            return;
+        }
+        if (isVisibleToUser) {
+            mSearchView.requestFocus();
+            InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+            inputMethodManager.showSoftInput(mSearchView.findFocus(), InputMethodManager.SHOW_IMPLICIT);
+        } else {
+            mSearchView.clearFocus();
+        }
+    }
+
+    @Override
     public boolean onQueryTextSubmit(String query) {
+        mSearchView.clearFocus();
+
+        // search for stations
         Call<List<Station>> call = RadioApplication.sDiscovererService.search(query);
         call.enqueue(new Callback<List<Station>>() {
             @Override
