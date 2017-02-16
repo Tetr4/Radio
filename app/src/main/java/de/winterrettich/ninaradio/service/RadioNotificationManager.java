@@ -31,6 +31,7 @@ public class RadioNotificationManager {
     private PendingIntent mPlayIntent;
     private PendingIntent mPauseIntent;
     private PendingIntent mDismissIntent;
+    private Notification mNotification;
 
     private Context mContext;
     private MediaSessionCompat mMediaSession;
@@ -116,8 +117,8 @@ public class RadioNotificationManager {
 
             builder.setContent(notificationView);
         }
-
-        mNotificationManager.notify(NOTIFICATION_ID, builder.build());
+        mNotification = builder.build();
+        mNotificationManager.notify(NOTIFICATION_ID, mNotification);
     }
 
     public void hideNotification() {
@@ -142,5 +143,13 @@ public class RadioNotificationManager {
     public void clearExtraText() {
         mExtraText = null;
         showNotification();
+    }
+
+    public int getNotificationId() {
+        return NOTIFICATION_ID;
+    }
+
+    public Notification getNotification() {
+        return mNotification;
     }
 }

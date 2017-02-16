@@ -202,11 +202,13 @@ public class RadioPlayerService extends Service {
                 }
                 mRadioPlayerManager.play();
                 mRadioNotificationManager.setPlaybackState(PlaybackEvent.PLAY);
+                startForeground(mRadioNotificationManager.getNotificationId(), mRadioNotificationManager.getNotification());
                 mMetadataRetriever.start();
                 break;
             case PAUSE:
                 mAudioManager.abandonAudioFocus(mAudioFocusCallback);
                 mRadioPlayerManager.pause();
+                stopForeground(false);
                 mRadioNotificationManager.setPlaybackState(PlaybackEvent.PAUSE);
                 mRadioNotificationManager.clearExtraText();
                 mMetadataRetriever.stop();
