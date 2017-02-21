@@ -20,7 +20,8 @@ import de.winterrettich.ninaradio.event.SelectStationEvent;
 public class RadioDatabase {
     public static final String TAG = RadioDatabase.class.getSimpleName();
     public static final String PREF_FIRST_LAUNCH = "PREF_FIRST_LAUNCH";
-    public static final String PREF_LAST_STATION_ID = "PREF_LAST_STATION_ID";
+    public static final String PREF_LAST_STATION_NAME = "PREF_LAST_STATION_NAME";
+    public static final String PREF_LAST_STATION_URL = "PREF_LAST_STATION_URL";
 
     public PlaybackEvent playbackState = PlaybackEvent.STOP;
     public BufferEvent bufferingState = BufferEvent.BUFFERING;
@@ -52,9 +53,13 @@ public class RadioDatabase {
 
     private void initLastStation() {
         // load last station, e.g. when app is recreated after being terminated because of low memory
-        if (mPreferences.contains(PREF_LAST_STATION_ID)) {
-            long lastStationId = mPreferences.getLong(PREF_LAST_STATION_ID, -1);
-            selectedStation = findStationById(lastStationId);
+        if (mPreferences.contains(PREF_LAST_STATION_NAME)) {
+            String lastStationName = mPreferences.getString(PREF_LAST_STATION_NAME, null);
+            String lastStationUrl = mPreferences.getString(PREF_LAST_STATION_URL, null);
+            selectedStation = findMatchingStation(lastStationName, lastStationUrl);
+            if (selectedStation == null) {
+                selectedStation = new Station(lastStationName, lastStationUrl);
+            }
             playbackState = PlaybackEvent.PAUSE;
         }
     }
@@ -134,10 +139,16 @@ public class RadioDatabase {
     @Subscribe
     public void handleSelectStationEvent(SelectStationEvent event) {
         selectedStation = event.station;
-        if (event.station != null) {
-            mPreferences.edit().putLong(PREF_LAST_STATION_ID, event.station.getId()).apply();
+        if (selectedStation != null) {
+            mPreferences.edit()
+                    .putString(PREF_LAST_STATION_NAME, selectedStation.name)
+                    .putString(PREF_LAST_STATION_URL, selectedStation.url)
+                    .apply();
         } else {
-            mPreferences.edit().remove(PREF_LAST_STATION_ID).apply();
+            mPreferences.edit()
+                    .remove(PREF_LAST_STATION_NAME)
+                    .remove(PREF_LAST_STATION_URL)
+                    .apply();
         }
     }
 
@@ -149,9 +160,12 @@ public class RadioDatabase {
     @Subscribe
     public void handlePlaybackEvent(PlaybackEvent event) {
         playbackState = event;
-        if (event == PlaybackEvent.STOP) {
+        if (playbackState == PlaybackEvent.STOP) {
             selectedStation = null;
-            mPreferences.edit().remove(PREF_LAST_STATION_ID).apply();
+            mPreferences.edit()
+                    .remove(PREF_LAST_STATION_NAME)
+                    .remove(PREF_LAST_STATION_URL)
+                    .apply();
         }
     }
 
