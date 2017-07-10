@@ -144,7 +144,7 @@ public class RadioPlayerService extends Service {
     }
 
     private void initWifiLock() {
-        mWifiLock = ((WifiManager) getSystemService(WIFI_SERVICE))
+        mWifiLock = ((WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE))
                 .createWifiLock(WifiManager.WIFI_MODE_FULL, BuildConfig.APPLICATION_ID);
         mWifiLock.acquire();
     }
