@@ -130,7 +130,7 @@ public class FavoriteStationsFragment extends Fragment implements ActionMode.Cal
                 break;
 
             case DELETE_STATION:
-                if (mAdapter.getSelection().equals(event.station)) {
+                if (event.station.equals(mAdapter.getSelection())) {
                     mAdapter.clearSelection();
                 }
                 mAdapter.deleteStation(event.station);
