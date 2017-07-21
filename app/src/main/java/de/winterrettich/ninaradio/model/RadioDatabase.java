@@ -18,7 +18,7 @@ import de.winterrettich.ninaradio.event.PlaybackEvent;
 import de.winterrettich.ninaradio.event.SelectStationEvent;
 
 public class RadioDatabase {
-    public static final String TAG = RadioDatabase.class.getSimpleName();
+    private static final String TAG = RadioDatabase.class.getSimpleName();
     public static final String PREF_FIRST_LAUNCH = "PREF_FIRST_LAUNCH";
     public static final String PREF_LAST_STATION_NAME = "PREF_LAST_STATION_NAME";
     public static final String PREF_LAST_STATION_URL = "PREF_LAST_STATION_URL";
@@ -99,6 +99,10 @@ public class RadioDatabase {
             }
         }
         return null;
+    }
+
+    public Station findMatchingStation(Station station) {
+        return findMatchingStation(station.name, station.url);
     }
 
     public Station findMatchingStation(String name, String url) {

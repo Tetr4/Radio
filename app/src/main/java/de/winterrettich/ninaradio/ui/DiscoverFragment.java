@@ -14,8 +14,7 @@ import android.widget.SearchView;
 
 import com.squareup.otto.Subscribe;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.ArrayList;
 
 import de.winterrettich.ninaradio.R;
 import de.winterrettich.ninaradio.RadioApplication;
@@ -25,16 +24,17 @@ import de.winterrettich.ninaradio.event.DiscoverErrorEvent;
 import de.winterrettich.ninaradio.event.PlaybackEvent;
 import de.winterrettich.ninaradio.event.SelectStationEvent;
 import de.winterrettich.ninaradio.model.Station;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 public class DiscoverFragment extends Fragment implements StationAdapter.StationClickListener, SearchView.OnQueryTextListener {
     private static final String TAG = DiscoverFragment.class.getSimpleName();
     private StationAdapter mAdapter;
     private SearchView mSearchView;
     private View mProgressIndicator;
-    private Call<List<Station>> mSearchCall;
+    private Disposable mSearchSubscription;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -45,10 +45,10 @@ public class DiscoverFragment extends Fragment implements StationAdapter.Station
 
         mProgressIndicator = rootView.findViewById(R.id.progress_indicator);
 
-        RecyclerView favoritesList = (RecyclerView) rootView.findViewById(R.id.result_list);
-        favoritesList.setLayoutManager(new LinearLayoutManager(getActivity()));
-        favoritesList.setAdapter(mAdapter);
-        favoritesList.setHasFixedSize(true);
+        RecyclerView searchResultList = (RecyclerView) rootView.findViewById(R.id.result_list);
+        searchResultList.setLayoutManager(new LinearLayoutManager(getActivity()));
+        searchResultList.setAdapter(mAdapter);
+        searchResultList.setHasFixedSize(true);
 
         mSearchView = (SearchView) rootView.findViewById(R.id.search_view);
         mSearchView.setOnQueryTextListener(this);
@@ -70,6 +70,12 @@ public class DiscoverFragment extends Fragment implements StationAdapter.Station
     public void onPause() {
         super.onPause();
         RadioApplication.sBus.unregister(this);
+
+        // cancel running searches
+        if (mSearchSubscription != null) {
+            mSearchSubscription.dispose();
+        }
+        mProgressIndicator.setVisibility(View.GONE);
     }
 
     @Override
@@ -136,57 +142,6 @@ public class DiscoverFragment extends Fragment implements StationAdapter.Station
     }
 
     @Override
-    public boolean onQueryTextSubmit(String query) {
-        mSearchView.clearFocus();
-
-        resetSearch();
-
-        // show progressbar
-        mProgressIndicator.setVisibility(View.VISIBLE);
-
-        // search for stations
-        mSearchCall = RadioApplication.sDiscovererService.search(query);
-        mSearchCall.enqueue(new Callback<List<Station>>() {
-            @Override
-            public void onResponse(Call<List<Station>> call, Response<List<Station>> response) {
-                mProgressIndicator.setVisibility(View.GONE);
-
-                if (!response.isSuccessful()) {
-                    String message = getString(R.string.error_discovering_stations);
-                    String rawMessage = response.raw().message();
-                    if (rawMessage != null) {
-                        message += " (" + response.raw().message() + ")";
-                    }
-                    RadioApplication.sBus.post(new DiscoverErrorEvent(message));
-                    return;
-                }
-
-                List<Station> stations = response.body();
-
-                // show stations
-                mAdapter.setStations(stations);
-
-                if (stations.isEmpty()) {
-                    String message = getString(R.string.no_stations_discovered);
-                    RadioApplication.sBus.post(new DiscoverErrorEvent(message));
-                } else {
-                    // a station may already be playing
-                    mAdapter.setSelection(RadioApplication.sDatabase.selectedStation);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<List<Station>> call, Throwable t) {
-                mProgressIndicator.setVisibility(View.GONE);
-                String message = getString(R.string.error_discovering_stations);
-                Log.e(TAG, message, t);
-                RadioApplication.sBus.post(new DiscoverErrorEvent(message));
-            }
-        });
-        return true;
-    }
-
-    @Override
     public boolean onQueryTextChange(String newText) {
         if (newText.length() == 0) {
             resetSearch();
@@ -195,14 +150,70 @@ public class DiscoverFragment extends Fragment implements StationAdapter.Station
         return false;
     }
 
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        mSearchView.clearFocus();
+        resetSearch();
+        searchStations(query);
+        return true;
+    }
+
+    private void searchStations(String query) {
+        // show progressbar
+        mProgressIndicator.setVisibility(View.VISIBLE);
+
+        // search for stations
+        mSearchSubscription = RadioApplication.sDiscovererService.search(query)
+                .subscribeOn(Schedulers.io())
+                .flatMapIterable(list -> list) // retrieve each station from list
+                .flatMap(this::resolveStreamUrl)
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .map(station -> {
+                    // try using existing station (e.g. with existing database id)
+                    Station existingStation = RadioApplication.sDatabase.findMatchingStation(station);
+                    return existingStation != null ? existingStation : station;
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(station -> {
+                            // add this station to search result list
+                            mProgressIndicator.setVisibility(View.GONE);
+                            mAdapter.insertStation(station, mAdapter.getItemCount());
+                            mAdapter.setSelection(RadioApplication.sDatabase.selectedStation);
+                        },
+                        error -> {
+                            // show error
+                            mProgressIndicator.setVisibility(View.GONE);
+                            String message = getString(R.string.error_discovering_stations);
+                            message += " (" + error.getMessage() + ")";
+                            Log.e(TAG, message, error);
+                            RadioApplication.sBus.post(new DiscoverErrorEvent(message));
+                        },
+                        () -> {
+                            // show error when no stations were found after completion
+                            mProgressIndicator.setVisibility(View.GONE);
+                            if (mAdapter.getItemCount() == 0) {
+                                String message = getString(R.string.no_stations_discovered);
+                                RadioApplication.sBus.post(new DiscoverErrorEvent(message));
+                            }
+                        });
+    }
+
+    private Observable<Station> resolveStreamUrl(Station stationWithIntermediateUrl) {
+        return Observable.just(stationWithIntermediateUrl) // resolve stream urls in parallel
+                .subscribeOn(Schedulers.io())
+                .flatMap(station -> RadioApplication.sStreamUrlResolver
+                                .resolve(station.url)
+                                .onExceptionResumeNext(Observable.empty()), // skip invalid urls
+                        (station, newUrl) -> new Station(station.name, newUrl));
+    }
+
     private void resetSearch() {
-        if (mSearchCall != null) {
-            // cancel running search calls
-            mSearchCall.cancel();
+        if (mSearchSubscription != null) {
+            mSearchSubscription.dispose();
         }
         mProgressIndicator.setVisibility(View.GONE);
         mAdapter.clearSelection();
-        mAdapter.setStations(Collections.<Station>emptyList());
+        mAdapter.setStations(new ArrayList<>());
     }
 
 }

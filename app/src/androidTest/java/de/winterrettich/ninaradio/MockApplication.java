@@ -14,12 +14,13 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import de.winterrettich.ninaradio.discover.DiscoverService;
+import de.winterrettich.ninaradio.discover.StreamUrlResolver;
 import de.winterrettich.ninaradio.event.DatabaseEvent;
 import de.winterrettich.ninaradio.model.RadioDatabase;
 import de.winterrettich.ninaradio.model.Station;
-import retrofit2.Call;
+import io.reactivex.Observable;
 import retrofit2.Retrofit;
-import retrofit2.http.Query;
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.mock.BehaviorDelegate;
 import retrofit2.mock.MockRetrofit;
 import retrofit2.mock.NetworkBehavior;
@@ -61,6 +62,7 @@ public class MockApplication extends RadioApplication {
     protected void setupDiscoverService() {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("http://opml.radiotime.com/")
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build();
 
         NetworkBehavior networkBehavior = NetworkBehavior.create();
@@ -71,20 +73,24 @@ public class MockApplication extends RadioApplication {
                 .build();
         final BehaviorDelegate<DiscoverService> delegate = mockRetrofit.create(DiscoverService.class);
 
-        sDiscovererService = new DiscoverService() {
+        sDiscovererService = query -> {
+            List<Station> stations = new ArrayList<>();
+
+            // find existing station
+            Station station = RadioApplication.sDatabase.findMatchingStation(query, "");
+            if (station == null) {
+                // create new station
+                station = new Station(query, "");
+            }
+            stations.add(station);
+
+            return delegate.returningResponse(stations).search(query);
+        };
+
+        sStreamUrlResolver = new StreamUrlResolver(null) {
             @Override
-            public Call<List<Station>> search(@Query("query") String query) {
-                List<Station> stations = new ArrayList<>();
-
-                // find existing station
-                Station station = RadioApplication.sDatabase.findMatchingStation(query, "");
-                if (station == null) {
-                    // create new station
-                    station = new Station(query, "");
-                }
-                stations.add(station);
-
-                return delegate.returningResponse(stations).search(query);
+            public Observable<String> resolve(String intermediateUrl) {
+                return Observable.just(intermediateUrl);
             }
         };
     }
@@ -92,14 +98,10 @@ public class MockApplication extends RadioApplication {
     public void clearDatabase() {
         // run on main thread
         Handler handler = new Handler(Looper.getMainLooper());
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                for (Station station : sDatabase.getStations()) {
-                    sBus.post(new DatabaseEvent(DatabaseEvent.Operation.DELETE_STATION, station));
-                }
+        handler.post(() -> {
+            for (Station station : sDatabase.getStations()) {
+                sBus.post(new DatabaseEvent(DatabaseEvent.Operation.DELETE_STATION, station));
             }
         });
     }
-
 }
