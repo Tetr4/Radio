@@ -17,7 +17,7 @@ import com.bignerdranch.android.multiselector.SingleSelector;
 import com.bignerdranch.android.multiselector.SwappingHolder;
 import com.github.ivbaranov.mfb.MaterialFavoriteButton;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 import de.winterrettich.ninaradio.R;
@@ -34,7 +34,7 @@ import de.winterrettich.ninaradio.model.Station;
  */
 public class StationAdapter extends RecyclerView.Adapter<StationAdapter.StationHolder> {
     private SingleSelector mSelector = new SingleSelector();
-    private List<Station> mStations = Collections.emptyList();
+    private List<Station> mStations = new ArrayList<>();
     private StationClickListener mClickListener;
     private boolean mShowFavorites = true;
 
