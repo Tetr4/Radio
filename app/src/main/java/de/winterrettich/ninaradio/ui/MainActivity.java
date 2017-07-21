@@ -103,8 +103,10 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View view) {
                         // undo by creating the station again
-                        DatabaseEvent undoEvent = new DatabaseEvent(DatabaseEvent.Operation.CREATE_STATION, station);
-                        RadioApplication.sBus.post(undoEvent);
+                        if (!RadioApplication.sDatabase.getStations().contains(station)) {
+                            DatabaseEvent undoEvent = new DatabaseEvent(DatabaseEvent.Operation.CREATE_STATION, station);
+                            RadioApplication.sBus.post(undoEvent);
+                        }
                     }
                 });
 
