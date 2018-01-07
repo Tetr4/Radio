@@ -1,6 +1,7 @@
 package de.winterrettich.ninaradio.service;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -22,6 +23,7 @@ import de.winterrettich.ninaradio.ui.MainActivity;
  */
 public class RadioNotificationManager {
     private static final int NOTIFICATION_ID = 1;
+    private static final String CHANNEL_ID = "playback";
     public static final String ACTION_NOTIFICATION_DISMISS = BuildConfig.APPLICATION_ID + ".ACTION_NOTIFICATION_DISMISS";
     public static final String ACTION_NOTIFICATION_PLAY = BuildConfig.APPLICATION_ID + ".ACTION_NOTIFICATION_PLAY";
     public static final String ACTION_NOTIFICATION_PAUSE = BuildConfig.APPLICATION_ID + ".ACTION_NOTIFICATION_PAUSE";
@@ -40,7 +42,7 @@ public class RadioNotificationManager {
     private String mExtraText;
 
 
-    public RadioNotificationManager(Context context, MediaSessionCompat mediaSession) {
+    RadioNotificationManager(Context context, MediaSessionCompat mediaSession) {
         mContext = context;
         mMediaSession = mediaSession;
 
@@ -64,7 +66,7 @@ public class RadioNotificationManager {
                 NOTIFICATION_ID, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
-    public void showNotification() {
+    private void showNotification() {
         String extra = mExtraText != null ? mExtraText : mStation.url;
 
         Notification.Builder builder = new Notification.Builder(mContext)
@@ -79,7 +81,6 @@ public class RadioNotificationManager {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             // use media style
-
             MediaSession.Token token = (MediaSession.Token) mMediaSession.getSessionToken().getToken();
 
             Notification.MediaStyle style = new Notification.MediaStyle()
@@ -98,8 +99,7 @@ public class RadioNotificationManager {
                     .setCategory(Notification.CATEGORY_TRANSPORT)
                     .setShowWhen(false);
         } else {
-            // Use remote view
-
+            // use remote view
             RemoteViews notificationView = new RemoteViews(mContext.getPackageName(),
                     R.layout.notification_playback_controls);
             notificationView.setTextViewText(R.id.title, mStation.name);
@@ -117,39 +117,52 @@ public class RadioNotificationManager {
 
             builder.setContent(notificationView);
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // add notification channel
+            NotificationChannel channel = mNotificationManager.getNotificationChannel(CHANNEL_ID);
+            if (channel == null) {
+                CharSequence channelName = mContext.getString(R.string.channel);
+                int importance = NotificationManager.IMPORTANCE_LOW;
+                channel = new NotificationChannel(CHANNEL_ID, channelName, importance);
+                mNotificationManager.createNotificationChannel(channel);
+            }
+            builder.setChannelId(CHANNEL_ID);
+        }
+
         mNotification = builder.build();
         mNotificationManager.notify(NOTIFICATION_ID, mNotification);
     }
 
-    public void hideNotification() {
+    void hideNotification() {
         mNotificationManager.cancel(NOTIFICATION_ID);
     }
 
-    public void setStation(Station station) {
+    void setStation(Station station) {
         mStation = station;
         showNotification();
     }
 
-    public void setPlaybackState(PlaybackEvent playbackState) {
+    void setPlaybackState(PlaybackEvent playbackState) {
         mPlaybackState = playbackState;
         showNotification();
     }
 
-    public void setExtraText(String extraText) {
+    void setExtraText(String extraText) {
         mExtraText = extraText;
         showNotification();
     }
 
-    public void clearExtraText() {
+    void clearExtraText() {
         mExtraText = null;
         showNotification();
     }
 
-    public int getNotificationId() {
+    int getNotificationId() {
         return NOTIFICATION_ID;
     }
 
-    public Notification getNotification() {
+    Notification getNotification() {
         return mNotification;
     }
 }

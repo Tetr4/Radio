@@ -10,6 +10,7 @@
     <string name="play_pause">play or pause</string>
     <string name="pause">pause</string>
     <string name="play">play</string>
+    <string name="channel">Playback</string>
 
     <!-- menu actions -->
     <string name="add_station">Add station</string>

@@ -1,22 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="add_station">Sender hinzufügen</string>
+    <!-- list items -->
+    <string name="play_station">Sender abspielen</string>
+
+    <!-- notification -->
     <string name="current_station">Sender der abgespielt wird</string>
     <string name="current_url">Url des aktuellen Senders</string>
-    <string name="delete_station">Sender löschen</string>
-    <string name="discover">Sendersuche</string>
-    <string name="edit_station">Sender bearbeiten</string>
-    <string name="error_discovering_stations">Fehler: Sender konnten nicht gesucht werden</string>
-    <string name="invalid_name">Gib einen Namen an</string>
-    <string name="invalid_url">Dies ist keine gültige URL</string>
-    <string name="media_error">Wiedergabefehler</string>
-    <string name="my_stations">Meine Sender</string>
-    <string name="no_stations_discovered">Keine Sender gefunden</string>
+    <string name="play_pause">Play/Pause</string>
     <string name="pause">Pause</string>
     <string name="play">Play</string>
-    <string name="play_pause">Play/Pause</string>
-    <string name="play_station">Sender abspielen</string>
+    <string name="channel">Wiedergabe</string>
+
+    <!-- menu actions -->
+    <string name="add_station">Sender hinzufügen</string>
+    <string name="delete_station">Sender löschen</string>
+    <string name="edit_station">Sender bearbeiten</string>
+
+    <!-- new station dialog -->
+    <string name="invalid_name">Gib einen Namen an</string>
+    <string name="invalid_url">Dies ist keine gültige URL</string>
+
+    <!-- snack bar -->
     <string name="station_deleted">Sender gelöscht</string>
+    <string name="media_error">Wiedergabefehler</string>
     <string name="undo">Rückgängig</string>
+
+    <!-- tabs -->
+    <string name="my_stations">Meine Sender</string>
+    <string name="discover">Sendersuche</string>
+
+    <!-- discover fragment -->
+    <string name="no_stations_discovered">Keine Sender gefunden</string>
+    <string name="error_discovering_stations">Fehler: Sender konnten nicht gesucht werden</string>
     <string name="please_wait">Suche Sender…</string>
 </resources>
