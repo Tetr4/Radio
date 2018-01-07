@@ -3,17 +3,19 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 def keystorePropertiesFile = rootProject.file("keystore.properties")
-def keystoreProperties = new Properties()
-keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
 android {
     // Signing
     signingConfigs {
-        config {
-            storeFile file(keystoreProperties['storeFile'])
-            storePassword keystoreProperties['storePassword']
-            keyAlias keystoreProperties['keyAlias']
-            keyPassword keystoreProperties['keyPassword']
+        if (keystorePropertiesFile.exists()) {
+            def keystoreProperties = new Properties()
+            keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+            config {
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
         }
     }
 
@@ -31,7 +33,9 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.config
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.config
+            }
         }
         debug {
             applicationIdSuffix ".debug"
@@ -63,7 +67,8 @@ dependencies {
     // ORM
     implementation 'com.github.vicpinm:activeandroidrx:3.1.5'
     // Communication
-    implementation 'com.squareup:otto:1.3.8' // TODO switch to RxAndroid?
+    // TODO switch to RxAndroid?
+    implementation 'com.squareup:otto:1.3.8'
     // Webservice requests
     compile 'com.squareup.okhttp3:okhttp:3.8.1'
     compile 'com.squareup.retrofit2:retrofit:2.3.0'
