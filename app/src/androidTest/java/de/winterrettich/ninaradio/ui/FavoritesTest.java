@@ -3,10 +3,12 @@ package de.winterrettich.ninaradio.ui;
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import de.winterrettich.ninaradio.MockApplication;
 import de.winterrettich.ninaradio.R;
@@ -25,6 +27,7 @@ import static de.winterrettich.ninaradio.ui.DiscoverTest.swipeToDiscoverTab;
 import static de.winterrettich.ninaradio.ui.DiscoverTest.swipeToFavoriteTab;
 import static org.hamcrest.CoreMatchers.not;
 
+@RunWith(AndroidJUnit4.class)
 public class FavoritesTest {
 
     @Rule
@@ -69,12 +72,9 @@ public class FavoritesTest {
     }
 
     private void addStation() {
-        InstrumentationRegistry.getInstrumentation().runOnMainSync(new Runnable() {
-            @Override
-            public void run() {
-                Station station = new Station(DiscoverTest.STATION_NAME, "");
-                MockApplication.sBus.post(new DatabaseEvent(DatabaseEvent.Operation.CREATE_STATION, station));
-            }
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
+            Station station = new Station(DiscoverTest.STATION_NAME, "");
+            MockApplication.sBus.post(new DatabaseEvent(DatabaseEvent.Operation.CREATE_STATION, station));
         });
     }
 
